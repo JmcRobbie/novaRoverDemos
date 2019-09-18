@@ -160,10 +160,7 @@ def plot_covariance_ellipse(xEst, PEst):  # pragma: no cover
     py = np.array(fx[1, :] + xEst[1, 0]).flatten()
     plt.plot(px, py, "--r")
 
-
-def main():
-    print(__file__ + " start!!")
-
+def ekf_run():
     time = 0.0
 
     # State Vector [x y yaw v]'
@@ -209,4 +206,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    ekf_run()
