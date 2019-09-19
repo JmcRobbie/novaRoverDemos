@@ -13,7 +13,7 @@ P. I. Corke, "Robotics, Vision & Control", Springer 2017, ISBN 978-3-319-54413-7
 import matplotlib.pyplot as plt
 import numpy as np
 from random import random
-
+from demoUtilities import rover
 # simulation parameters
 Kp_rho = 9
 Kp_alpha = 15
@@ -21,26 +21,25 @@ Kp_beta = -3
 dt = 0.01
 
 show_animation = True
-
-def move_to_pose_step(x_curr, y_curr, theta_curr, x_goal, y_goal, theta_goal):
+def move_to_pose_step(curr,goal):
     """
     This is a simplified version of the 'move_to_pose' routine with
     the key difference that this one is meant to be run in the loop with
     other functions operating around it.
     """
-    x = x_start
-    y = y_start
-    theta = theta_start
+    Kp_rho = 9
+    Kp_alpha = 15
+    Kp_beta = -3
+    dt = 0.01
 
-    x_diff = x_goal - x
-    y_diff = y_goal - y
-
-    x_traj, y_traj = [], []
+    x = curr.x
+    y = curr.y
+    theta = curr.theta
+    theta_goal = goal.theta
+    x_diff = goal.x - x
+    y_diff = goal.y - y
 
     rho = np.sqrt(x_diff**2 + y_diff**2)
-
-    x_diff = x_goal - x
-    y_diff = y_goal - y
 
     # Restrict alpha and beta (angle differences) to the range
     # [-pi, pi] to prevent unstable behavior e.g. difference going
