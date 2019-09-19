@@ -1,5 +1,9 @@
 from math import sqrt, inf
 from itertools import product
+import matplotlib.pyplot as plt
+import heapq
+import numpy as np
+import random
 
 def euclidean_heuristic_cost(curr, end):
     """
@@ -19,6 +23,7 @@ def manhattan_heuristic_cost(curr, end):
     end_x, end_y = end
     return abs(curr_x-end_x) + abs(curr_y-end_y)
 
+
 def reconstruct_path_to_destination(prev, end):
     """
     Constructs an in-order sequence of (x,y) coordinates (list of tuples)
@@ -32,6 +37,7 @@ def reconstruct_path_to_destination(prev, end):
         path.insert(0, curr)
     return path
 
+# A* Search
 def get_successors(node, grid):
     """
     The neighbors of a cell (node) in the grid are the 8-surrounding cells.
@@ -151,3 +157,166 @@ def dijkstra(grid,start,end):
         : waypoints, list of (x,y) tuples
         """
     return a_star(grid,start,end,null_heuristic)
+
+
+class PriorityQueue:
+    """
+    Queue data structure that returns the highest priority item in the queue
+    """
+    def __init__(self):
+        self._elements = []
+
+    """
+    Method to return boolean value indicating if PriorityQueue is empty
+    """
+    def empty(self):
+        return len(self._elements) == 0
+
+    """
+    Add element item to queue 
+    """
+    def put(self, item, priority):
+        heapq.heappush(self._elements, (priority, item))
+
+    """
+    Method to return highest priority item in queue 
+    @param state : current state in board 
+    @return      : highest priority item in queue if start is none, else the item with the same state 
+    """
+    def get(self, state=None):
+        return heapq.heappop(self._elements)[1]
+
+    """
+    Return length of queue
+    """
+    def len(self):
+        return len(self._elements)
+
+    """
+    Method to return boolean value indicating if item is contained in the queue 
+    """
+    def __contains__(self, other):
+        for item in self._elements:
+            if other == item[1]:
+                return True
+        return False
+
+    """
+    Method to return the index of an item if it occurs in the queue 
+    """
+    def index(self, item):
+        for index, elem in enumerate(self._elements):
+            if item == elem[1]:
+                return index
+        return -1
+
+
+# Greedy Search
+def is_obstacle(pos, grid, threshold=0.75):
+    return grid_cost(pos, grid) > threshold
+
+def grid_cost(pos, grid):
+    return grid[pos[0]][pos[1]]
+
+def is_goal(pos, goal):
+    return pos == goal
+
+def reconstruct_path(end_pos, prev):
+    result = [end_pos]
+
+    curr_pos = end_pos 
+    while curr_pos in prev.keys():
+        curr_pos = prev[curr_pos]
+        result.insert(0, curr_pos)
+    return result
+
+def get_neighbours(pos, grid):
+    n_cols = len(grid[0])
+    n_rows = len(grid)
+
+    neighbours = []
+
+    for i in [-1, 0, + 1]:
+        for j in [-1, 0, +1]:
+            x = pos[0] + i
+            y = pos[1] + j 
+            if (0 <= x < n_rows) and (0 <= y < n_cols) and (x, y) != pos: 
+                neighbours.append((x, y))
+    return neighbours
+
+def greedy_search(grid, start, end, heuristic_cost=manhattan_heuristic_cost):
+    closed_set = set()
+    open_set = PriorityQueue()
+
+    open_set.put(start, (heuristic_cost(start, end), grid_cost(start, grid)))
+
+    prev = {}
+
+    while not open_set.empty():
+        curr = open_set.get()
+
+        if is_goal(curr, end):
+            return reconstruct_path(curr, prev)
+
+        for neighbour in get_neighbours(curr, grid):
+            if neighbour in closed_set:
+                continue
+
+            elif is_obstacle(neighbour, grid):
+                continue
+
+            if neighbour not in open_set:
+                open_set.put(neighbour, (heuristic_cost(neighbour, end), grid_cost(neighbour, grid)))
+
+            prev[neighbour] = curr
+        closed_set.add(curr)
+
+    return []
+
+def basic_grid():
+    array = [0.0, 0.1, 0.6, 0.8]
+    grid = np.random.choice(array, (8, 8))
+    return grid
+
+def norm_grid(size=(15, 15)):
+    grid = []
+    n_rows, n_cols = size
+    for i in range(n_rows):
+        grid.append([])
+
+        for j in range(n_cols):
+            val = np.random.normal(loc=0.2, scale = 0.7)
+            while val < 0 or val > 1:
+                val = np.random.normal(loc=0.5, scale=0.7)
+
+            grid[i].append(val)
+
+    return grid
+
+def plot_grid(grid, path):
+    plt.imshow(grid, cmap='hot', interpolation='nearest')
+
+    x_pos = []
+    y_pos = []
+
+    for x in path:
+        x_pos.append(x[1])
+        y_pos.append(x[0])
+    plt.plot(x_pos,y_pos, "ro",color = "Green")
+
+
+    plt.show()
+    
+def test_search(grid, search):
+    start =  (1, 1)
+    goal = (len(grid) - 1, len(grid[0]) - 1)
+    path = search(grid, start, goal, euclidean_heuristic_cost)
+    print(path)
+    plot_grid(grid, path)
+
+test_grid = norm_grid()
+
+print("ASTAR")
+test_search(test_grid, a_star)
+print("Greedy")
+test_search(test_grid, greedy_search)
