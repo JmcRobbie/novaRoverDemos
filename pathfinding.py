@@ -134,3 +134,20 @@ def a_star(grid, start, end, heuristic_cost=manhattan_heuristic_cost):
 
     # if we get to this point, it's not possible to reach the end destination
     return []
+def nullHeuristic(curr, end):
+    return 0
+def dijkstra(grid,start,end):
+        """
+        Implementation of Dijkstra Star over a 2D grid. Returns a list of waypoints
+        as a list of (x,y) tuples. This exploits the special case of a_star reducing
+        to dijkstra's algorithm when the heuristic is a null heuristic.
+
+        Input:
+        : grid, 2D matrix
+        : start, (x,y) tuple, start position
+        : end, (x,y) tuple, end destination
+
+        Output:
+        : waypoints, list of (x,y) tuples
+        """
+    return a_star(grid,start,end,null_heuristic)
