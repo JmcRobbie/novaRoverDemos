@@ -62,6 +62,20 @@ def _get_neighbours(pos, grid):
                 neighbours.append((x, y))
     return neighbours
 
+def _get_neighbours(pos, grid):
+    n_cols = len(grid[0])
+    n_rows = len(grid)
+
+    neighbours = []
+    node_x, node_y = pos
+    for dx in [-1, 0, + 1]:
+        for dy in [-1, 0, +1]:
+            x = node_x + dx
+            y = node_y + dy
+            if (0 <= x < n_rows) and (0 <= y < n_cols) and (x, y) != pos: 
+                neighbours.append((x, y))
+    return neighbours
+
 def _node_with_min_fscore(open_set, f_cost): # open_set is a set (of cell) and f_cost is a dict (with cells as keys)
     """
     Find the cell in open set with the smallest f score.

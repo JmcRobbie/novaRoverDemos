@@ -33,11 +33,11 @@ def _get_neighbours(pos, grid):
     n_rows = len(grid)
 
     neighbours = []
-
-    for i in [-1, 0, + 1]:
-        for j in [-1, 0, +1]:
-            x = pos[0] + i
-            y = pos[1] + j 
+    node_x, node_y = pos
+    for dx in [-1, 0, + 1]:
+        for dy in [-1, 0, +1]:
+            x = node_x + dx
+            y = node_y + dy
             if (0 <= x < n_rows) and (0 <= y < n_cols) and (x, y) != pos: 
                 neighbours.append((x, y))
     return neighbours
@@ -64,7 +64,8 @@ def greedy_search(grid, start, end, heuristic_cost=manhattan_cost):
                 continue
 
             if neighbour not in open_set:
-                open_set.put(neighbour, (heuristic_cost(neighbour, end), grid_cost(neighbour, grid)))
+                open_set.put(neighbour, (heuristic_cost(neighbour, end),
+                                         grid_cost(neighbour, grid)))
 
             prev[neighbour] = curr
         closed_set.add(curr)
