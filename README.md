@@ -4,7 +4,7 @@ This is a repo to demonstrate some system control and filtering ideas for an aut
 ## Things to note
 * Main branch is master, branch from that - and open a pull request once it is developed.
 
-* Git conventions are using "feature/_insert feature name here_"as branch names for features. And "hotfix/_thing being fixed here". 
+* Git conventions are using "feature/_insert feature name here_"as branch names for features. And "hotfix/_thing being fixed here_". 
 	* Before merging code make sure that you havent broken anything else in the repo. 
 
 * Follow PEP8 style guide conventions: https://www.python.org/dev/peps/pep-0008/
