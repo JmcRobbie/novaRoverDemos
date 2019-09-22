@@ -6,7 +6,7 @@ try:
 except:
     raise
     
-from pathfinding.heuristic import manhattan_cost
+from pathfinding.heuristic import euclidean_cost
 from math import sqrt, inf
 from itertools import product
 import numpy as np
@@ -40,9 +40,9 @@ def _get_neighbors(pos, grid):
 
 def _grid_cost(pos, grid):
     x, y = pos
-    return grid[y][x]
+    return grid[x][y]
 
-def a_star_search(grid, start, end, heuristic_cost=manhattan_cost):
+def a_star_search(grid, start, end, heuristic_cost=euclidean_cost):
     """
     Implementation of A Star over a 2D grid. Returns a list of waypoints
     as a list of (x,y) tuples.
