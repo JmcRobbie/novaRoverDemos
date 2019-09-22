@@ -14,6 +14,8 @@ import numpy as np
 import random
 from pathfinding.heuristic import manhattan_cost
 
+np.random.seed(0)
+
 # A* Search
 
 # Greedy Search
@@ -21,7 +23,8 @@ def _is_obstacle(pos, grid, threshold=0.75):
     return _grid_cost(pos, grid) > threshold
 
 def _grid_cost(pos, grid):
-    return grid[pos[0]][pos[1]]
+    x, y = pos
+    return grid[y][x]
 
 def _is_goal(pos, goal):
     return pos == goal
@@ -53,7 +56,7 @@ def best_first_search(grid, start, end, heuristic_cost=manhattan_cost):
     closed_set = set()
     open_set = PriorityQueue()
 
-    open_set.put(start, (heuristic_cost(start, end), _grid_cost(start, grid)))
+    open_set.put(start, (_grid_cost(start, grid), heuristic_cost(start, end)))
 
     prev = {}
 
@@ -67,12 +70,8 @@ def best_first_search(grid, start, end, heuristic_cost=manhattan_cost):
             if neighbor in closed_set:
                 continue
 
-            elif _is_obstacle(neighbor, grid):
-                continue
-
             if neighbor not in open_set:
-                open_set.put(neighbor, (heuristic_cost(neighbor, end),
-                                         _grid_cost(neighbor, grid)))
+                open_set.put(neighbor, (_grid_cost(neighbor, grid), heuristic_cost(neighbor, end)))
 
             prev[neighbor] = curr
         closed_set.add(curr)

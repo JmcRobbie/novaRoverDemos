@@ -48,9 +48,10 @@ def plot_grid(grid, path, title):
     x_pos = []
     y_pos = []
 
-    for x in path:
-        x_pos.append(x[1])
-        y_pos.append(x[0])
+    for x, y in path:
+        x_pos.append(x)
+        y_pos.append(y)
+        
     plt.plot(x_pos,y_pos, "ro",color = "Green")
     plt.title("Path cost: " + str(path_cost), fontsize=10)
     plt.suptitle("Path demonstration of " + title + " Search", y=0.97, fontsize=16)
@@ -60,7 +61,6 @@ def test_search(grid, search, title):
     start =  (1, 1)
     goal = (len(grid) - 1, len(grid[0]) - 1)
     path = search(grid, start, goal)
-    print(path)
     plot_grid(grid, path, title)
 
 test_grid = norm_grid()

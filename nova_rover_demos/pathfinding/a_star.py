@@ -6,7 +6,7 @@ try:
 except:
     raise
     
-from pathfinding.heuristic import euclidean_cost
+from pathfinding.heuristic import manhattan_cost
 from math import sqrt, inf
 from itertools import product
 import numpy as np
@@ -40,9 +40,9 @@ def _get_neighbors(pos, grid):
 
 def _grid_cost(pos, grid):
     x, y = pos
-    return grid[x][y]
+    return grid[y][x]
 
-def a_star_search(grid, start, end, heuristic_cost=euclidean_cost):
+def a_star_search(grid, start, end, heuristic_cost=manhattan_cost):
     """
     Implementation of A Star over a 2D grid. Returns a list of waypoints
     as a list of (x,y) tuples.
@@ -60,13 +60,12 @@ def a_star_search(grid, start, end, heuristic_cost=euclidean_cost):
 
     # the set of cells already discovered
     open_set = PriorityQueue()
-    open_set.put(start, (heuristic_cost(start, end), _grid_cost(start, grid)))
+    open_set.put(start, heuristic_cost(start, end))
 
     # for each cell, mapping to its least-cost incoming cell
     prev = {}
 
     # for each node, cost of reaching it from start (g_cost)
-    # for each node, cost of getting from start to dest via that node (f_cost)
     #   note: cell->dest component of f_cost will be estimated using a heuristic
     g_cost = {}
     for r in range(len(grid)):
@@ -78,6 +77,7 @@ def a_star_search(grid, start, end, heuristic_cost=euclidean_cost):
     while not open_set.empty():
         # node in open set with min fscore
         curr = open_set.get()
+        closed_set.add(curr)
 
         # if we've reached the destination
         if curr == end:
@@ -92,7 +92,7 @@ def a_star_search(grid, start, end, heuristic_cost=euclidean_cost):
             # add neighbor to newly discovered nodes
             if neighbor not in open_set:
                 f_cost = g_cost[neighbor] + heuristic_cost(neighbor, end)
-                open_set.put(neighbor, (f_cost, _grid_cost(neighbor, grid)))
+                open_set.put(neighbor, f_cost)
 
             # if we've already got a lower g_score for neighbor, then move on
             elif curr_g_score >= g_cost[neighbor]:
@@ -101,8 +101,6 @@ def a_star_search(grid, start, end, heuristic_cost=euclidean_cost):
             prev[neighbor] = curr
             g_cost[neighbor] = curr_g_score
         
-        closed_set.add(curr)
-
 
     # if we get to this point, it's not possible to reach the end destination
     return []
