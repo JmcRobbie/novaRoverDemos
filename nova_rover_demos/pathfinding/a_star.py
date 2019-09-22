@@ -1,13 +1,17 @@
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/../")
+try:
+    from utils.priority_queue import PriorityQueue
+except:
+    raise
+    
+from pathfinding.heuristic import manhattan_cost
 from math import sqrt, inf
 from itertools import product
-import matplotlib.pyplot as plt
-import heapq
 import numpy as np
-import random
-from utils.priority_queue import PriorityQueue
-from heuristic import manhattan_cost
 
-def _reconstruct_path_to_destination(self, prev, end):
+def _reconstruct_path_to_destination(prev, end):
     """
     Constructs an in-order sequence of (x,y) coordinates (list of tuples)
     to the end destination using the mapping from nodes to their predecessors
@@ -48,19 +52,19 @@ def _reconstruct_path_to_destination(self, prev, end):
 
 #     return successors
 
-def _get_neighbours(pos, grid):
+def _get_neighbors(pos, grid):
     n_cols = len(grid[0])
     n_rows = len(grid)
 
-    neighbours = []
+    neighbors = []
     node_x, node_y = pos
     for dx in [-1, 0, + 1]:
         for dy in [-1, 0, +1]:
             x = node_x + dx
             y = node_y + dy
             if (0 <= x < n_rows) and (0 <= y < n_cols) and (x, y) != pos: 
-                neighbours.append((x, y))
-    return neighbours
+                neighbors.append((x, y))
+    return neighbors
 
 def _node_with_min_fscore(open_set, f_cost): # open_set is a set (of cell) and f_cost is a dict (with cells as keys)
     """
@@ -90,7 +94,7 @@ def a_star_search(grid, start, end, heuristic_cost=manhattan_cost):
 
     # the set of cells already discovered
     open_set = PriorityQueue()
-    open_set.put(start, (heuristic_cost(start, end), grid_cost(start, grid)))
+    open_set.put(start, (heuristic_cost(start, end), _grid_cost(start, grid)))
 
     # for each cell, mapping to its least-cost incoming cell
     prev = {}
@@ -113,16 +117,16 @@ def a_star_search(grid, start, end, heuristic_cost=manhattan_cost):
         if curr == end:
             return _reconstruct_path_to_destination(prev, curr)
 
-        for neighbor in get_neighbours(curr, grid):
+        for neighbor in _get_neighbors(curr, grid):
             # ignore neighbors which have already been evaluated
             if neighbor in closed_set:
                 continue
 
-            curr_g_score =  g_cost[curr] + _grid_cost(neighbour, grid)
+            curr_g_score =  g_cost[curr] + _grid_cost(neighbor, grid)
             # add neighbor to newly discovered nodes
             if neighbor not in open_set:
                 f_cost = g_cost[neighbor] + heuristic_cost(neighbor, end)
-                open_set.put(neighbour, (f_cost, _grid_cost(neighbour, grid)))
+                open_set.put(neighbor, (f_cost, _grid_cost(neighbor, grid)))
 
             # if we've already got a lower g_score for neighbor, then move on
             elif curr_g_score >= g_cost[neighbor]:

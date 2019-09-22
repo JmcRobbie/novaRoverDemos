@@ -42,7 +42,7 @@ def _get_neighbours(pos, grid):
                 neighbours.append((x, y))
     return neighbours
 
-def greedy_search(grid, start, end, heuristic_cost=manhattan_cost):
+def best_first_search(grid, start, end, heuristic_cost=manhattan_cost):
     closed_set = set()
     open_set = PriorityQueue()
 

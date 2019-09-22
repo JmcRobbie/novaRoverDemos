@@ -27,9 +27,9 @@ def move_to_pose_step(curr,goal):
     the key difference that this one is meant to be run in the loop with
     other functions operating around it.
     """
-    Kp_rho = 0.9
-    Kp_alpha = 1.5
-    Kp_beta = -0.3
+    Kp_rho = 9
+    Kp_alpha = 15
+    Kp_beta = -3
     dt = 0.01
 
     x = curr.x

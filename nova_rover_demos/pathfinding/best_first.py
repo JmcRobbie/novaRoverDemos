@@ -5,7 +5,7 @@ try:
     from utils.priority_queue import PriorityQueue
 except:
     raise
-
+    
 from math import sqrt, inf
 from itertools import product
 import matplotlib.pyplot as plt
@@ -14,8 +14,6 @@ import numpy as np
 import random
 from pathfinding.heuristic import manhattan_cost
 
-np.random.seed(0)
-
 # A* Search
 
 # Greedy Search
@@ -23,8 +21,7 @@ def _is_obstacle(pos, grid, threshold=0.75):
     return _grid_cost(pos, grid) > threshold
 
 def _grid_cost(pos, grid):
-    row, col = pos
-    return grid[row][col]
+    return grid[pos[0]][pos[1]]
 
 def _is_goal(pos, goal):
     return pos == goal
@@ -32,7 +29,7 @@ def _is_goal(pos, goal):
 def _reconstruct_path(end, prev):
     result = [end]
 
-    curr = end
+    curr = end 
     while curr in prev.keys():
         curr = prev[curr]
         result.insert(0, curr)
@@ -43,20 +40,20 @@ def _get_neighbors(pos, grid):
     n_rows = len(grid)
 
     neighbours = []
-    node_row, node_col = pos
-    for drow in [-1, 0, + 1]:
-        for dcol in [-1, 0, +1]:
-            row = node_row + drow
-            col = node_col + dcol
-            if (0 <= row < n_rows) and (0 <= col < n_cols) and (row, col) != pos:
-                neighbours.append((row, col))
+    node_x, node_y = pos
+    for dx in [-1, 0, + 1]:
+        for dy in [-1, 0, +1]:
+            x = node_x + dx
+            y = node_y + dy
+            if (0 <= x < n_rows) and (0 <= y < n_cols) and (x, y) != pos: 
+                neighbours.append((x, y))
     return neighbours
 
 def best_first_search(grid, start, end, heuristic_cost=manhattan_cost):
     closed_set = set()
     open_set = PriorityQueue()
 
-    open_set.put(start, (_grid_cost(start, grid), heuristic_cost(start, end)))
+    open_set.put(start, (heuristic_cost(start, end), _grid_cost(start, grid)))
 
     prev = {}
 
@@ -70,8 +67,12 @@ def best_first_search(grid, start, end, heuristic_cost=manhattan_cost):
             if neighbor in closed_set:
                 continue
 
+            elif _is_obstacle(neighbor, grid):
+                continue
+
             if neighbor not in open_set:
-                open_set.put(neighbor, (_grid_cost(neighbor, grid), heuristic_cost(neighbor, end)))
+                open_set.put(neighbor, (heuristic_cost(neighbor, end),
+                                         _grid_cost(neighbor, grid)))
 
             prev[neighbor] = curr
         closed_set.add(curr)
