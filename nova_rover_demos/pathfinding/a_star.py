@@ -6,7 +6,7 @@ try:
 except:
     raise
     
-from pathfinding.heuristic import manhattan_cost
+from pathfinding.heuristic import euclidean_cost
 from math import sqrt, inf
 from itertools import product
 import numpy as np
@@ -24,59 +24,25 @@ def _reconstruct_path_to_destination(prev, end):
         path.insert(0, curr)
     return path
 
-# def _get_successors(node, grid):
-#     """
-#     The neighbors of a cell (node) in the grid are the 8-surrounding cells.
-#     """
-#     successors = []
-
-#     node_x, node_y = node
-#     n_rows = len(grid)
-#     n_cols = len(grid[0])
-
-#     for dx, dy in product([-1,0,1],[-1,0,1]):
-#         # skip the current node itself
-#         if (dx == 0 and dy == 0):
-#             continue
-
-#         x = node_x + dx
-#         y = node_y + dy
-
-#         if (0 <= x < n_rows and 0 <= y < n_cols):
-#             cost = grid[y][x]
-#         else:
-#             # put infinite penalty on successors that would take us off the edge of the grid
-#             cost = inf
-
-#         successors.append( ((x, y), cost) )
-
-#     return successors
-
 def _get_neighbors(pos, grid):
     n_cols = len(grid[0])
     n_rows = len(grid)
 
     neighbors = []
     node_x, node_y = pos
-    for dx in [-1, 0, + 1]:
-        for dy in [-1, 0, +1]:
-            x = node_x + dx
-            y = node_y + dy
-            if (0 <= x < n_rows) and (0 <= y < n_cols) and (x, y) != pos: 
-                neighbors.append((x, y))
+    for dx, dy in product([-1,0,1],[-1,0,1]):
+        x = node_x + dx
+        y = node_y + dy
+        if (0 <= x < n_rows) and (0 <= y < n_cols) and (x, y) != pos: 
+            neighbors.append((x, y))
+            
     return neighbors
 
-def _node_with_min_fscore(open_set, f_cost): # open_set is a set (of cell) and f_cost is a dict (with cells as keys)
-    """
-    Find the cell in open set with the smallest f score.
-    """
-    f_cost_open = dict([a for a in f_cost.items() if a[0] in open_set])
-    return min(f_cost_open, key=f_cost_open.get)
-
 def _grid_cost(pos, grid):
-    return grid[pos[0]][pos[1]]
+    x, y = pos
+    return grid[x][y]
 
-def a_star_search(grid, start, end, heuristic_cost=manhattan_cost):
+def a_star_search(grid, start, end, heuristic_cost=euclidean_cost):
     """
     Implementation of A Star over a 2D grid. Returns a list of waypoints
     as a list of (x,y) tuples.
