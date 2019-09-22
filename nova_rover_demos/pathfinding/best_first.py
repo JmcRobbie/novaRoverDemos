@@ -5,7 +5,7 @@ try:
     from utils.priority_queue import PriorityQueue
 except:
     raise
-    
+
 from math import sqrt, inf
 from itertools import product
 import matplotlib.pyplot as plt
@@ -23,8 +23,8 @@ def _is_obstacle(pos, grid, threshold=0.75):
     return _grid_cost(pos, grid) > threshold
 
 def _grid_cost(pos, grid):
-    x, y = pos
-    return grid[y][x]
+    row, col = pos
+    return grid[row][col]
 
 def _is_goal(pos, goal):
     return pos == goal
@@ -32,7 +32,7 @@ def _is_goal(pos, goal):
 def _reconstruct_path(end, prev):
     result = [end]
 
-    curr = end 
+    curr = end
     while curr in prev.keys():
         curr = prev[curr]
         result.insert(0, curr)
@@ -43,13 +43,13 @@ def _get_neighbors(pos, grid):
     n_rows = len(grid)
 
     neighbours = []
-    node_x, node_y = pos
-    for dx in [-1, 0, + 1]:
-        for dy in [-1, 0, +1]:
-            x = node_x + dx
-            y = node_y + dy
-            if (0 <= x < n_rows) and (0 <= y < n_cols) and (x, y) != pos: 
-                neighbours.append((x, y))
+    node_row, node_col = pos
+    for drow in [-1, 0, + 1]:
+        for dcol in [-1, 0, +1]:
+            row = node_row + drow
+            col = node_col + dcol
+            if (0 <= row < n_rows) and (0 <= col < n_cols) and (row, col) != pos:
+                neighbours.append((row, col))
     return neighbours
 
 def best_first_search(grid, start, end, heuristic_cost=manhattan_cost):

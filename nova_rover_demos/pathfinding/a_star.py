@@ -5,7 +5,7 @@ try:
     from utils.priority_queue import PriorityQueue
 except:
     raise
-    
+
 from pathfinding.heuristic import euclidean_cost
 from math import sqrt, inf
 from itertools import product
@@ -13,7 +13,7 @@ import numpy as np
 
 def _reconstruct_path_to_destination(prev, end):
     """
-    Constructs an in-order sequence of (x,y) coordinates (list of tuples)
+    Constructs an in-order sequence of (row,col) coordinates (list of tuples)
     to the end destination using the mapping from nodes to their predecessors
     (prev).
     """
@@ -29,31 +29,31 @@ def _get_neighbors(pos, grid):
     n_rows = len(grid)
 
     neighbors = []
-    node_x, node_y = pos
-    for dx, dy in product([-1,0,1],[-1,0,1]):
-        x = node_x + dx
-        y = node_y + dy
-        if (0 <= x < n_rows) and (0 <= y < n_cols) and (x, y) != pos: 
-            neighbors.append((x, y))
-            
+    node_row, node_col = pos
+    for drow, dcol in product([-1,0,1],[-1,0,1]):
+        row = node_row + drow
+        col = node_col + dcol
+        if (0 <= row < n_rows) and (0 <= col < n_cols) and (row, col) != pos:
+            neighbors.append((row, col))
+
     return neighbors
 
 def _grid_cost(pos, grid):
-    x, y = pos
-    return grid[x][y]
+    row, col = pos
+    return grid[row][col]
 
 def a_star_search(grid, start, end, heuristic_cost=euclidean_cost):
     """
     Implementation of A Star over a 2D grid. Returns a list of waypoints
-    as a list of (x,y) tuples.
+    as a list of (row,col) tuples.
 
     Input:
     : grid, 2D matrix
-    : start, (x,y) tuple, start position
-    : end, (x,y) tuple, end destination
+    : start, (row,col) tuple, start position
+    : end, (row,col) tuple, end destination
 
     Output:
-    : waypoints, list of (x,y) tuples
+    : waypoints, list of (row,y) tuples
     """
     # the set of cells already evaluated
     closed_set = set()
@@ -72,7 +72,7 @@ def a_star_search(grid, start, end, heuristic_cost=euclidean_cost):
         for c in range(len(grid[0])):
             cell = (r, c)
             g_cost[cell] = inf
-            
+
     g_cost[start] = 0
     while not open_set.empty():
         # node in open set with min fscore
@@ -100,7 +100,7 @@ def a_star_search(grid, start, end, heuristic_cost=euclidean_cost):
 
             prev[neighbor] = curr
             g_cost[neighbor] = curr_g_score
-        
+
 
     # if we get to this point, it's not possible to reach the end destination
     return []
