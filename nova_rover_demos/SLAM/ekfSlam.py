@@ -15,7 +15,7 @@ class ekfSlam:
     Qsim = np.diag([0.2, np.deg2rad(1.0)])**2
     Rsim = np.diag([1.0, np.deg2rad(10.0)])**2
 
-    DT = 0.1  # time tick [s]
+    DT = 0.01  # time tick [s]
     SIM_TIME = 50.0  # simulation time [s]
     MAX_RANGE = 20.0  # maximum observation range
     M_DIST_TH = 2.0  # Threshold of Mahalanobis distance for data association.
@@ -40,7 +40,6 @@ class ekfSlam:
 
             nLM = ekfSlam.calc_n_LM(xEst)
             if minid == nLM:
-                print("New LM")
                 # Extend state and covariance matrix
                 xAug = np.vstack((xEst, ekfSlam.calc_LM_Pos(xEst, z[iz, :])))
                 PAug = np.vstack((np.hstack((PEst, np.zeros((len(xEst), ekfSlam.LM_SIZE)))),
