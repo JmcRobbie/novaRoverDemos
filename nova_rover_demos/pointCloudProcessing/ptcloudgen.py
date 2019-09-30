@@ -57,17 +57,35 @@ class point_cloud_gen:
 		z = self.ptcloud[:,2]
 		ax.scatter(x,y,z)
 		pyplot.show()
-
-
-
+	def GetOccupancyGrid(self,x_res,y_res, heuristic):
+		'''
+		Returns an occupancy grid of the point cloud over the relevant range.
+		Occupancy is computed based on a heuristic that can be configured.  
+		'''
+		xSteps = int(abs(self.size[0][0] -self.size[0][1])/x_res)
+		ySteps = int(abs(self.size[1][0] -self.size[1][1])/y_res)
+		obstacleCloud = self.ptcloud[np.where(self.ptcloud[:,2]>0.2)]
+		self.occupancy = np.zeros([xSteps,ySteps]) ## construct occupancy grid
+		for point in obstacleCloud:
+			xc = int(point[0]/xSteps)
+			yc = int(point[1]/ySteps)
+			self.occupancy[xc][yc] = self.occupancy[xc][yc] + point[2]
+			if self.occupancy[xc][yc]>10.0:
+				 self.occupancy[xc][yc] = 10.0
+		return self.occupancy
+	def plotOccGrid(self):
+def test_occGrid():
+	size = [(0,1),(0,2),(0,5)]
+	cld = point_cloud_gen(size,0)
+	cld.uniformCloud()
+	cld.GetOccupancyGrid(0.1,0.1,1)
+	cld.plotOccGrid()
 def test_ptcloud():
 	size = [(0,1),(0,2),(0,5)]
 	cld = point_cloud_gen(size,0)
 	cld.uniformCloud()
+	cld.GetOccupancyGrid(0.1,0.1,1)
 	cld.plotCloud()
-
-
-
 
 if __name__ == '__main__':
     test_ptcloud()
