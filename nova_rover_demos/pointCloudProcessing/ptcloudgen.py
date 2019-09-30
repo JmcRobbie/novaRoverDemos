@@ -100,7 +100,7 @@ class point_cloud_gen:
 
 		dat = np.zeros([self.num_points,self.dims])
 		for i in range(self.num_features):
-			place = (self.size[0][0],self.size[0][1],self.size[1][0],self.size[1][1])
+			place = (rn.uniform(self.size[0][0],self.size[0][1]),rn.uniform(self.size[1][0],self.size[1][1]))
 			gaussians.append(place)
 		
 		for i in range(self.num_points):
@@ -109,7 +109,7 @@ class point_cloud_gen:
 
 			dat[i][2] = 0
 			for j in range(self.num_features):
-				dat[i][2] = dat[i][2] + self._gaussian((0.5,0.5), dat[i][0],dat[i][1],1.0,(0.1,0.1))
+				dat[i][2] = dat[i][2] + self._gaussian(gaussians[j], dat[i][0],dat[i][1],1.0,(0.1,0.1))
 		self.ptcloud = dat
 		return
 	
