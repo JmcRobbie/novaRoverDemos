@@ -15,3 +15,13 @@ class Rover:
 
     def update_map(self,map):
         self.world = map
+    def check_error(self,rover2):
+        '''
+        Returns the error between the self object an another rover, this is used for checking exit 
+        conditions on pose control loops.
+        '''
+        dx = abs(self.x - rover2.x)
+        dy = abs(self.y - rover2.y)
+        dth = abs(self.theta - rover2.theta)
+        
+        return dx*dx+dy*dy+dth*dth
