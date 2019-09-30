@@ -10,7 +10,6 @@ Author: Jack McRobbie
 import math
 import numpy as np
 import random as rn
-from cloud import cloud
 from matplotlib import pyplot
 from mpl_toolkits.mplot3d import Axes3D
 
