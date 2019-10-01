@@ -1,7 +1,7 @@
 # Demo algorithms for the Nova Rover
 This is a repo to demonstrate some system control and filtering ideas for an autonomous rover. In general this repo is for concept development and demonstration.
 
-```NOTE``` Main branch is dev, branch from that - and open a pull request once it is developed.
+```NOTE``` Main branch is develop, branch from that - and open a pull request once it is developed.
 
 Master is for deployment ready code.
 
