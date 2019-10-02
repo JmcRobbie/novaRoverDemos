@@ -7,7 +7,7 @@ import math
 import numpy as np
 import matplotlib.pyplot as plt
 
-class ekfSlam:
+class EkfSlam:
     # EKF state covariance
     Cx = np.diag([0.5, 0.5, np.deg2rad(30.0)])**2
 
@@ -28,32 +28,32 @@ class ekfSlam:
     def ekf_slam(xEst, PEst, u, z):
 
         # Predict
-        S = ekfSlam.STATE_SIZE
-        xEst[0:S] = ekfSlam.motion_model(xEst[0:S], u)
-        G, Fx = ekfSlam.jacob_motion(xEst[0:S], u)
-        PEst[0:S, 0:S] = G.T * PEst[0:S, 0:S] * G + Fx.T * ekfSlam.Cx * Fx
+        S = EkfSlam.STATE_SIZE
+        xEst[0:S] = EkfSlam.motion_model(xEst[0:S], u)
+        G, Fx = EkfSlam.jacob_motion(xEst[0:S], u)
+        PEst[0:S, 0:S] = G.T * PEst[0:S, 0:S] * G + Fx.T * EkfSlam.Cx * Fx
         initP = np.eye(2)
 
         # Update
         for iz in range(len(z[:, 0])):  # for each observation
-            minid = ekfSlam.search_correspond_LM_ID(xEst, PEst, z[iz, 0:2])
+            minid = EkfSlam.search_correspond_LM_ID(xEst, PEst, z[iz, 0:2])
 
-            nLM = ekfSlam.calc_n_LM(xEst)
+            nLM = EkfSlam.calc_n_LM(xEst)
             if minid == nLM:
                 # Extend state and covariance matrix
-                xAug = np.vstack((xEst, ekfSlam.calc_LM_Pos(xEst, z[iz, :])))
-                PAug = np.vstack((np.hstack((PEst, np.zeros((len(xEst), ekfSlam.LM_SIZE)))),
-                                np.hstack((np.zeros((ekfSlam.LM_SIZE, len(xEst))), initP))))
+                xAug = np.vstack((xEst, EkfSlam.calc_LM_Pos(xEst, z[iz, :])))
+                PAug = np.vstack((np.hstack((PEst, np.zeros((len(xEst), EkfSlam.LM_SIZE)))),
+                                np.hstack((np.zeros((EkfSlam.LM_SIZE, len(xEst))), initP))))
                 xEst = xAug
                 PEst = PAug
-            lm = ekfSlam.get_LM_Pos_from_state(xEst, minid)
-            y, S, H = ekfSlam.calc_innovation(lm, xEst, PEst, z[iz, 0:2], minid)
+            lm = EkfSlam.get_LM_Pos_from_state(xEst, minid)
+            y, S, H = EkfSlam.calc_innovation(lm, xEst, PEst, z[iz, 0:2], minid)
 
             K = (PEst @ H.T) @ np.linalg.inv(S)
             xEst = xEst + (K @ y)
             PEst = (np.eye(len(xEst)) - (K @ H)) @ PEst
 
-        xEst[2] = ekfSlam.pi_2_pi(xEst[2])
+        xEst[2] = EkfSlam.pi_2_pi(xEst[2])
 
         return xEst, PEst
 
@@ -67,7 +67,7 @@ class ekfSlam:
 
     def observation(xTrue, xd, u, RFID):
 
-        xTrue = ekfSlam.motion_model(xTrue, u)
+        xTrue = EkfSlam.motion_model(xTrue, u)
 
         # add noise to gps x-y
         z = np.zeros((0, 3))
@@ -77,19 +77,19 @@ class ekfSlam:
             dx = RFID[i, 0] - xTrue[0, 0]
             dy = RFID[i, 1] - xTrue[1, 0]
             d = math.sqrt(dx**2 + dy**2)
-            angle = ekfSlam.pi_2_pi(math.atan2(dy, dx) - xTrue[2, 0])
-            if d <= ekfSlam.MAX_RANGE:
-                dn = d + np.random.randn() * ekfSlam.Qsim[0, 0]  # add noise
-                anglen = angle + np.random.randn() * ekfSlam.Qsim[1, 1]  # add noise
+            angle = EkfSlam.pi_2_pi(math.atan2(dy, dx) - xTrue[2, 0])
+            if d <= EkfSlam.MAX_RANGE:
+                dn = d + np.random.randn() * EkfSlam.Qsim[0, 0]  # add noise
+                anglen = angle + np.random.randn() * EkfSlam.Qsim[1, 1]  # add noise
                 zi = np.array([dn, anglen, i])
                 z = np.vstack((z, zi))
 
         # add noise to input
         ud = np.array([[
-            u[0, 0] + np.random.randn() * ekfSlam.Rsim[0, 0],
-            u[1, 0] + np.random.randn() * ekfSlam.Rsim[1, 1]]]).T
+            u[0, 0] + np.random.randn() * EkfSlam.Rsim[0, 0],
+            u[1, 0] + np.random.randn() * EkfSlam.Rsim[1, 1]]]).T
 
-        xd = ekfSlam.motion_model(xd, ud)
+        xd = EkfSlam.motion_model(xd, ud)
         return xTrue, z, xd, ud
 
 
@@ -99,29 +99,29 @@ class ekfSlam:
                     [0, 1.0, 0],
                     [0, 0, 1.0]])
 
-        B = np.array([[ekfSlam.DT * math.cos(x[2, 0]), 0],
-                    [ekfSlam.DT * math.sin(x[2, 0]), 0],
-                    [0.0, ekfSlam.DT]])
+        B = np.array([[EkfSlam.DT * math.cos(x[2, 0]), 0],
+                    [EkfSlam.DT * math.sin(x[2, 0]), 0],
+                    [0.0, EkfSlam.DT]])
 
         x = (F @ x) + (B @ u)
         return x
 
 
     def calc_n_LM(x):
-        n = int((len(x) - ekfSlam.STATE_SIZE) / ekfSlam.LM_SIZE)
+        n = int((len(x) - EkfSlam.STATE_SIZE) / EkfSlam.LM_SIZE)
         return n
 
 
     def jacob_motion(x, u):
 
-        Fx = np.hstack((np.eye(ekfSlam.STATE_SIZE), np.zeros(
-            (ekfSlam.STATE_SIZE, ekfSlam.LM_SIZE * ekfSlam.calc_n_LM(x)))))
+        Fx = np.hstack((np.eye(EkfSlam.STATE_SIZE), np.zeros(
+            (EkfSlam.STATE_SIZE, EkfSlam.LM_SIZE * EkfSlam.calc_n_LM(x)))))
 
-        jF = np.array([[0.0, 0.0, -ekfSlam.DT * u[0] * math.sin(x[2, 0])],
-                    [0.0, 0.0, ekfSlam.DT * u[0] * math.cos(x[2, 0])],
+        jF = np.array([[0.0, 0.0, -EkfSlam.DT * u[0] * math.sin(x[2, 0])],
+                    [0.0, 0.0, EkfSlam.DT * u[0] * math.cos(x[2, 0])],
                     [0.0, 0.0, 0.0]])
 
-        G = np.eye(ekfSlam.STATE_SIZE) + Fx.T * jF * Fx
+        G = np.eye(EkfSlam.STATE_SIZE) + Fx.T * jF * Fx
 
         return G, Fx,
 
@@ -139,7 +139,7 @@ class ekfSlam:
 
     def get_LM_Pos_from_state(x, ind):
 
-        lm = x[ekfSlam.STATE_SIZE + ekfSlam.LM_SIZE * ind: ekfSlam.STATE_SIZE + ekfSlam.LM_SIZE * (ind + 1), :]
+        lm = x[EkfSlam.STATE_SIZE + EkfSlam.LM_SIZE * ind: EkfSlam.STATE_SIZE + EkfSlam.LM_SIZE * (ind + 1), :]
 
         return lm
 
@@ -149,16 +149,16 @@ class ekfSlam:
         Landmark association with Mahalanobis distance
         """
 
-        nLM = ekfSlam.calc_n_LM(xAug)
+        nLM = EkfSlam.calc_n_LM(xAug)
 
         mdist = []
 
         for i in range(nLM):
-            lm = ekfSlam.get_LM_Pos_from_state(xAug, i)
-            y, S, H = ekfSlam.calc_innovation(lm, xAug, PAug, zi, i)
+            lm = EkfSlam.get_LM_Pos_from_state(xAug, i)
+            y, S, H = EkfSlam.calc_innovation(lm, xAug, PAug, zi, i)
             mdist.append(y.T @ np.linalg.inv(S) @ y)
 
-        mdist.append(ekfSlam.M_DIST_TH)  # new landmark
+        mdist.append(EkfSlam.M_DIST_TH)  # new landmark
 
         minid = mdist.index(min(mdist))
 
@@ -169,11 +169,11 @@ class ekfSlam:
         delta = lm - xEst[0:2]
         q = (delta.T @ delta)[0, 0]
         zangle = math.atan2(delta[1, 0], delta[0, 0]) - xEst[2, 0]
-        zp = np.array([[math.sqrt(q), ekfSlam.pi_2_pi(zangle)]])
+        zp = np.array([[math.sqrt(q), EkfSlam.pi_2_pi(zangle)]])
         y = (z - zp).T
-        y[1] = ekfSlam.pi_2_pi(y[1])
-        H = ekfSlam.jacobH(q, delta, xEst, LMid + 1)
-        S = H @ PEst @ H.T + ekfSlam.Cx[0:2, 0:2]
+        y[1] = EkfSlam.pi_2_pi(y[1])
+        H = EkfSlam.jacobH(q, delta, xEst, LMid + 1)
+        S = H @ PEst @ H.T + EkfSlam.Cx[0:2, 0:2]
 
         return y, S, H
 
@@ -184,7 +184,7 @@ class ekfSlam:
                     [delta[1, 0], - delta[0, 0], - 1.0, - delta[1, 0], delta[0, 0]]])
 
         G = G / q
-        nLM = ekfSlam.calc_n_LM(x)
+        nLM = EkfSlam.calc_n_LM(x)
         F1 = np.hstack((np.eye(3), np.zeros((3, 2 * nLM))))
         F2 = np.hstack((np.zeros((2, 3)), np.zeros((2, 2 * (i - 1))),
                         np.eye(2), np.zeros((2, 2 * nLM - 2 * i))))
@@ -210,42 +210,42 @@ class ekfSlam:
                         [11.0, 11.0]])
 
         # State Vector [x y yaw v]'
-        xEst = np.zeros((ekfSlam.STATE_SIZE, 1))
-        xTrue = np.zeros((ekfSlam.STATE_SIZE, 1))
-        PEst = np.eye(ekfSlam.STATE_SIZE)
+        xEst = np.zeros((EkfSlam.STATE_SIZE, 1))
+        xTrue = np.zeros((EkfSlam.STATE_SIZE, 1))
+        PEst = np.eye(EkfSlam.STATE_SIZE)
 
-        xDR = np.zeros((ekfSlam.STATE_SIZE, 1))  # Dead reckoning
+        xDR = np.zeros((EkfSlam.STATE_SIZE, 1))  # Dead reckoning
 
         # history
         hxEst = xEst
         hxTrue = xTrue
         hxDR = xTrue
 
-        while ekfSlam.SIM_TIME >= time:
-            time += ekfSlam.DT
-            u = ekfSlam.calc_input()
+        while EkfSlam.SIM_TIME >= time:
+            time += EkfSlam.DT
+            u = EkfSlam.calc_input()
 
-            xTrue, z, xDR, ud = ekfSlam.observation(xTrue, xDR, u, RFID)
+            xTrue, z, xDR, ud = EkfSlam.observation(xTrue, xDR, u, RFID)
 
-            xEst, PEst = ekfSlam.ekf_slam(xEst, PEst, ud, z)
+            xEst, PEst = EkfSlam.ekf_slam(xEst, PEst, ud, z)
 
-            x_state = xEst[0:ekfSlam.STATE_SIZE]
+            x_state = xEst[0:EkfSlam.STATE_SIZE]
 
             # store data history
             hxEst = np.hstack((hxEst, x_state))
             hxDR = np.hstack((hxDR, xDR))
             hxTrue = np.hstack((hxTrue, xTrue))
 
-            if ekfSlam.show_animation:  # pragma: no cover
+            if EkfSlam.show_animation:  # pragma: no cover
                 plt.cla()
 
                 plt.plot(RFID[:, 0], RFID[:, 1], "*k")
                 plt.plot(xEst[0], xEst[1], ".r")
 
                 # plot landmark
-                for i in range(ekfSlam.calc_n_LM(xEst)):
-                    plt.plot(xEst[ekfSlam.STATE_SIZE + i * 2],
-                            xEst[ekfSlam.STATE_SIZE + i * 2 + 1], "xg")
+                for i in range(EkfSlam.calc_n_LM(xEst)):
+                    plt.plot(xEst[EkfSlam.STATE_SIZE + i * 2],
+                            xEst[EkfSlam.STATE_SIZE + i * 2 + 1], "xg")
 
                 plt.plot(hxTrue[0, :],
                         hxTrue[1, :], "-b")
@@ -259,4 +259,4 @@ class ekfSlam:
 
 
 if __name__ == '__main__':
-    ekfSlam.main()
+    EkfSlam.main()
