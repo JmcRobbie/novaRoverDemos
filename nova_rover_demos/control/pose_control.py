@@ -21,7 +21,7 @@ Kp_beta = -3
 dt = 0.01
 
 show_animation = True
-def move_to_pose_step(curr,goal):
+def move_to_pose_step(curr, goal):
     """
     This is a simplified version of the 'move_to_pose' routine with
     the key difference that this one is meant to be run in the loop with
