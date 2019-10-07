@@ -6,10 +6,20 @@ try:
 except:
     raise
 
+class Pose:
+    # [x, y, yaw]
+    def __init__(self, x, y, theta):
+        self.x = x
+        self.y = y
+        self.theta = theta
+        
+    def get_pose(self):
+        return self.x, self.y, self.theta
+
 class Rover(Pose):
-    def __init__(self,x,y,th):
+    def __init__(self, x, y, th):
         # Initial conditions selected arbitrarily
-        super(x, y, th)
+        super().__init__(x, y, th)
         self.v = 0
         self.world = []
 
@@ -36,15 +46,16 @@ class Rover(Pose):
     def load_waypoints(self, waypoints):
         if waypoints:
             self._waypoints = list(waypoints)
-            self._target = self.waypoints.pop(0)
+            self._target = self._waypoints.pop(0)
         else:
             print("Error: No waypoints loaded")
     
     def update_waypoints(self):
         if self._waypoints:
-            self._target = self.waypoints.pop(0)
-            return self._target
-        
+            self._target = self._waypoints.pop(0)
+        else:
+            self._target = None
+            
     def target(self):
         return self._target
     
@@ -60,15 +71,8 @@ class Rover(Pose):
         return euclidean_cost((self.x, self.y), (self._target.x, self._target.y)) 
     
     def path_complete(self):
-        return self._waypoints is None 
+        return self._target == None
     
-    def get_pose(self):
+    def pose(self):
         return Pose(self.x, self.y, self.theta)
-        
-class Pose:
-    # [x, y, yaw]
-    def __init__(self, x, y, theta):
-        self.x = x
-        self.y = y
-        self.theta = theta
     
