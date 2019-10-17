@@ -5,24 +5,20 @@ try:
     from utils.priority_queue import PriorityQueue
 except:
     raise
-    
-import numpy as np
 
+import random
 
-def test_priority_queue(arr):
-    output = sorted(arr)
+def test_priority_queue():
+    arr = list(range(50))
+    output = arr.copy()
+    random.shuffle(arr)
     pq = PriorityQueue()
     
     for i in arr:
         pq.put(i, i)
         
     check = []
-    for j in pq.len():
+    for j in range(pq.len()):
         check.append(pq.get())
     
-    print(check, output)
-    assert(check == output)
-
-
-    
-arr = np.random.shuffle(range(50))
+    assert check == output
