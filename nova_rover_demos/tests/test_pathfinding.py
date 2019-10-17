@@ -57,21 +57,45 @@ def plot_grid(grid, path, title):
     plt.suptitle("Path demonstration of " + title + " Search", y=0.97, fontsize=16)
     plt.show()
     
-def test_search(grid, search, title):
+def search(grid, search, title, plot_grid_enable=False):
     start =  (1, 1)
     goal = (len(grid) - 1, len(grid[0]) - 1)
     path = search(grid, start, goal)
-    plot_grid(grid, path, title)
 
-test_grid = norm_grid()
+    if plot_grid_enable:
+        plot_grid(grid, path, title)
 
-test_search(test_grid, a_star_search, "A-Star")
-test_search(test_grid, best_first_search, "Best-First")
-test_search(test_grid, dijkstra_search, "Dijkstra")
+    return get_path_cost(grid, path)
 
-max_filter_grid = maximum_filter(test_grid, size=(3,3))
+def test_a_star_search():
+    a = search(norm_grid(), a_star_search, "A-Star")
+    assert 5 < a < 6
 
-test_search(max_filter_grid, a_star_search, "A-Star")
-test_search(max_filter_grid, best_first_search, "Best-First")
-test_search(max_filter_grid, dijkstra_search, "Dijkstra")
+def test_best_first_search():
+    a = search(norm_grid(), best_first_search, "Best-First")
+    assert 7 < a < 8
 
+def test_dijkstra_search():
+    a = search(norm_grid(), dijkstra_search, "Dijkstra")
+    assert 10 < a < 11
+
+def test_max_filter_grid_a_star_search():
+    a = search(maximum_filter(norm_grid(), size=(3,3)), a_star_search, "A-Star")
+    assert 12 < a < 13
+
+def test_max_filter_grid_best_first_search():
+    a = search(maximum_filter(norm_grid(), size=(3,3)), best_first_search, "Best-First")
+    assert 32 < a < 33
+
+def test_max_filter_grid_dijkstra_search():
+    a = search(maximum_filter(norm_grid(), size=(3,3)), dijkstra_search, "Dijkstra")
+    assert 13 < a < 14
+
+
+if __name__ == '__main__':
+    search(norm_grid(), a_star_search, "A-Star", plot_grid_enable=True)
+    search(norm_grid(), best_first_search, "Best-First", plot_grid_enable=True)
+    search(norm_grid(), dijkstra_search, "Dijkstra", plot_grid_enable=True)
+    search(maximum_filter(norm_grid(), size=(3,3)), a_star_search, "A-Star", plot_grid_enable=True)
+    search(maximum_filter(norm_grid(), size=(3,3)), best_first_search, "Best-First", plot_grid_enable=True)
+    search(maximum_filter(norm_grid(), size=(3,3)), dijkstra_search, "Dijkstra", plot_grid_enable=True)

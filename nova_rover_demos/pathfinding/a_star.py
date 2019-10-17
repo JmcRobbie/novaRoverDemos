@@ -86,11 +86,9 @@ def a_star_search(grid, start, end, heuristic_cost=euclidean_cost):
     #   note: cell->dest component of f_cost will be estimated using a heuristic
     g_cost = {}
     f_cost = {}
-    for r in range(len(grid)):
-        for c in range(len(grid[0])):
-            cell = (r, c)
-            g_cost[cell] = inf
-            f_cost[cell] = inf
+    for cell in product(range(len(grid)), range(len(grid[0]))):
+        g_cost[cell] = inf
+        f_cost[cell] = inf
     g_cost[start] = 0
     f_cost[start] = heuristic_cost(start, end)
 
