@@ -117,6 +117,24 @@ class PointCloudGen:
         for i in range(xSteps):
             for j in range(ySteps):
                 self.average[i][j] = sum_grid[i][j]/count_grid[i][j]
+    def gradientComputation(self,x_res,y_res):
+        x_size = self.size[0][0]
+        y_size = self.size[0][1]
+        xSteps = int(abs(self.size[0][0]-self.size[0][1])/x_res)
+        ySteps = int(abs(self.size[1][0]-self.size[1][1])/y_res)
+
+        self.gradient = np.zeros([xSteps, ySteps])
+        for i in range(xSteps):
+            for j in range(ySteps):
+                if i == 0 or j ==0:
+                    self.gradient[i][j] = 0
+                else:
+                    delx = (self.average[i-1][j] - self.average[i+1][j])/x_res
+                    dely = (self.average[i][j-1] - self.average[i][j+1])/y_res
+                    grad = abs(delx)+abs(dely)
+                    self.gradient[i][j] = grad
+
+
 
     def plot_occupancy_grid(self):
         '''
@@ -187,7 +205,7 @@ def test_numpy_constructor():
     ptcl = PointCloudGen.from_numpy_array(arr)
     print(ptcl.ptcloud)
 def test_gradientMethod():
-    
+
 
 if __name__ == '__main__':
     test_numpy_constructor()
