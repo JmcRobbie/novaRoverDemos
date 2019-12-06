@@ -100,6 +100,23 @@ class PointCloudGen:
             if self.occupancy[xc][yc] > 10.0:
                 self.occupancy[xc][yc] = 10.0
         return self.occupancy
+    def meanHeightGeneratior(self,x_res,y_res):
+        x_size = self.size[0][0]
+        y_size = self.size[0][1]
+        xSteps = int(abs(self.size[0][0] - self.size[0][1]) / x_res)
+        ySteps = int(abs(self.size[1][0] - self.size[1][1]) / y_res)
+
+        self.average = np.zeros([xSteps, ySteps])  # construct occupancy grid
+        count_grid = np.zeros([xSteps, ySteps])
+        sum_grid = np.zeros([xSteps, ySteps])
+        for point in self.ptcloud:
+            xc = int(point[0] / x_res)
+            yc = int(point[1] / y_res)
+            count_grid[xc][yc] += 1
+            sum_grid [xc][yc] = point[2]
+        for i in range(xSteps):
+            for j in range(ySteps):
+                self.average[i][j] = sum_grid[i][j]/count_grid[i][j]
 
     def plot_occupancy_grid(self):
         '''
@@ -169,7 +186,8 @@ def test_numpy_constructor():
     arr = np.random.rand(100, 3)
     ptcl = PointCloudGen.from_numpy_array(arr)
     print(ptcl.ptcloud)
-
+def test_gradientMethod():
+    
 
 if __name__ == '__main__':
     test_numpy_constructor()
