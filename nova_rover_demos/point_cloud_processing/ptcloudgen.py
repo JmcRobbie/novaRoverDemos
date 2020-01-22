@@ -101,8 +101,6 @@ class PointCloudGen:
                 self.occupancy[xc][yc] = 10.0
         return self.occupancy
     def meanHeightGenerator(self,x_res,y_res):
-        x_size = self.size[0][0]
-        y_size = self.size[0][1]
         xSteps = int(abs(self.size[0][0] - self.size[0][1]) / x_res)
         ySteps = int(abs(self.size[1][0] - self.size[1][1]) / y_res)
 
