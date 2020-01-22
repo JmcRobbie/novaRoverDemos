@@ -31,3 +31,16 @@ N_PARTICLE = 100  # number of particle
 NTH = N_PARTICLE / 1.5  # Number of particle for re-sampling
 
 show_animation = True
+
+class Particle:
+
+    def __init__(self, N_LM):
+        # * As the number of particles increase their weights decrease
+        self.w = 1.0 / N_PARTICLE
+        self.x = 0.0
+        self.y = 0.0
+        self.yaw = 0.0
+        # landmark x-y positions
+        self.lm = np.zeros((N_LM, LM_SIZE))
+        # landmark position covariance
+        self.lmP = np.zeros((N_LM * LM_SIZE, LM_SIZE))
