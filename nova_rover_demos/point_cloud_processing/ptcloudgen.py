@@ -100,7 +100,46 @@ class PointCloudGen:
             if self.occupancy[xc][yc] > 10.0:
                 self.occupancy[xc][yc] = 10.0
         return self.occupancy
+    def meanHeightGenerator(self,x_res,y_res):
+        xSteps = int(abs(self.size[0][0] - self.size[0][1]) / x_res)
+        ySteps = int(abs(self.size[1][0] - self.size[1][1]) / y_res)
 
+        self.average = np.zeros([xSteps, ySteps])  # construct occupancy grid
+        count_grid = np.zeros([xSteps, ySteps])
+        sum_grid = np.zeros([xSteps, ySteps])
+        for point in self.ptcloud:
+            xc = int(point[0] / x_res)
+            yc = int(point[1] / y_res)
+            count_grid[xc][yc] += 1
+            sum_grid [xc][yc] = point[2]
+        for i in range(xSteps):
+            for j in range(ySteps):
+                self.average[i][j] = sum_grid[i][j]/count_grid[i][j]
+    def gradientComputation(self,x_res,y_res):
+        '''
+        Computes a gradient for the mean height estimation.
+        Can then be used to evaluate for traversibility via some heuristic.
+        '''
+
+        xSteps = int(abs(self.size[0][0]-self.size[0][1])/x_res)
+        ySteps = int(abs(self.size[1][0]-self.size[1][1])/y_res)
+
+        self.gradient = np.zeros([xSteps, ySteps])
+        for i in range(xSteps):
+            for j in range(ySteps):
+                if i == 0 or j ==0 or i == xSteps-1 or j == ySteps-1:
+                    self.gradient[i][j] = 0
+                else:
+                    delx = (self.average[i-1][j] - self.average[i+1][j])/x_res
+                    dely = (self.average[i][j-1] - self.average[i][j+1])/y_res
+                    grad = abs(delx)+abs(dely)
+                    self.gradient[i][j] = grad
+    def plot_gradient_grid(self):
+        '''
+        Plots a heat map of the gradient map
+        '''
+        pyplot.imshow(self.gradient, cmap = 'hot', interpolation = 'nearest')
+        pyplot.show()
     def plot_occupancy_grid(self):
         '''
         Plots a heat map of the occupancy grid for the class.
@@ -169,7 +208,7 @@ def test_numpy_constructor():
     arr = np.random.rand(100, 3)
     ptcl = PointCloudGen.from_numpy_array(arr)
     print(ptcl.ptcloud)
-
+    
 
 if __name__ == '__main__':
     test_numpy_constructor()
