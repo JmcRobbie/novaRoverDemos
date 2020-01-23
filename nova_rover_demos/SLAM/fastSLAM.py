@@ -68,3 +68,44 @@ def fast_slam1(particles, u, z):
     # Resample particles with better accuracy 
 
     return particles
+
+'''
+Function: Motion model 
+    The function which will update the position of the rover 
+    peridically based on the control 
+
+Parameters: 
+    x: A list consisting the state of the rover (x, y, yaw)
+    u: Controls given to the rover
+'''
+def motion_model(x, u):
+    # The state matrix 
+    # In the demo only an identity matrix 
+    F = np.array([[1.0, 0, 0],
+                  [0, 1.0, 0],
+                  [0, 0, 1.0]])
+
+    # Input matrix
+    B = np.array([[DT * math.cos(x[2, 0]), 0],
+                  [DT * math.sin(x[2, 0]), 0],
+                  [0.0, DT]])
+
+    # Update the position of the rover based on the controls 
+    # * Doesn't adjust for any noise
+    x = F @ x + B @ u
+
+    # Convert the angle into the first quadrant 
+    x[2, 0] = pi_2_pi(x[2, 0])
+
+    return x
+
+
+'''
+Function: pi_2_pi
+    A function to convert angle into the first quadrant 
+
+Parameters: 
+    angle - The angle required to convert 
+'''
+def pi_2_pi(angle):
+    return (angle + math.pi) % (2 * math.pi) - math.pi
