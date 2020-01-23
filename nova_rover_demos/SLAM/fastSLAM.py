@@ -4,7 +4,8 @@ For a step by step implementation please check the Jupyter Notebook
 NOTE: 
 
 We do not own the entire code 
-The code is partly taken from the Python Robotics Repo 
+The majority of the code is taken from the Python Robotics Repo
+https://github.com/AtsushiSakai/PythonRobotics 
 '''
 
 import math
