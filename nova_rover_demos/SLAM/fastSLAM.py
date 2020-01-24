@@ -154,23 +154,31 @@ def resampling(particles):
     low variance re-sampling
     """
 
+    # normalise the weights of the particles
     particles = normalize_weight(particles)
 
+    # generate an array storing the weights of all the particles 
     pw = []
     for i in range(N_PARTICLE):
         pw.append(particles[i].w)
 
     pw = np.array(pw)
 
+    # calculate the effective particle number (note the matrix multiplication 
+    # has been replaced with the numpy matmul method as the "@" syntax is not
+    # valid in Python 2)
     #Neff = 1.0 / (pw @ pw.T)  # Effective particle number
     Neff = 1.0 / (np.matmul(pw, pw.T))  # Effective particle number
-    # print(Neff)
 
+    # run the resampling if the effective number of particles is below the set
+    # threshold
     if Neff < NTH:  # resampling
         wcum = np.cumsum(pw)
         base = np.cumsum(pw * 0.0 + 1 / N_PARTICLE) - 1 / N_PARTICLE
         resampleid = base + np.random.rand(base.shape[0]) / N_PARTICLE
 
+        # iterate through all the particles and store the indices of those drawn
+        # at random based off its weight
         inds = []
         ind = 0
         for ip in range(N_PARTICLE):
@@ -178,6 +186,8 @@ def resampling(particles):
                 ind += 1
             inds.append(ind)
 
+        # replace particles in the original set with the new set of freshly
+        # drawn particles
         tparticles = particles[:]
         for i in range(len(inds)):
             particles[i].x = tparticles[inds[i]].x
