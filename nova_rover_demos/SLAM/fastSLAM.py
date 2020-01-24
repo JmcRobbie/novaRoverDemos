@@ -62,11 +62,11 @@ Parameters:
 
 def fast_slam1(particles, u, z):
     
-    # predict the particles 
+    particles = predict_particles(particles, u)
 
-    # Update particles based on observation 
+    # update with observationss
 
-    # Resample particles with better accuracy 
+    particles = resampling(particles) 
 
     return particles
 
@@ -220,3 +220,81 @@ def normalize_weight(particles):
         return particles
 
     return particles
+
+
+def main():
+    print(__file__ + " start!!")
+
+    time = 0.0
+
+    # RFID positions [x, y]
+    # Random Landmark coordinatess
+    RFID = np.array([[10.0, -2.0],
+                     [15.0, 10.0],
+                     [15.0, 15.0],
+                     [10.0, 20.0],
+                     [3.0, 15.0],
+                     [-5.0, 20.0],
+                     [-5.0, 5.0],
+                     [-10.0, 15.0]
+                     ])
+    # Counting the number of landmarks       
+    N_LM = RFID.shape[0]
+
+    # State Vector [x y yaw v]'
+    xEst = np.zeros((STATE_SIZE, 1))  # SLAM estimation
+    xTrue = np.zeros((STATE_SIZE, 1))  # True state
+    xDR = np.zeros((STATE_SIZE, 1))  # Dead reckoning
+
+    # history
+    hxEst = xEst
+    hxTrue = xTrue
+    hxDR = xTrue
+
+    # Initalise the particles based on the landmarks
+    particles = [Particle(N_LM) for _ in range(N_PARTICLE)]
+
+    # Run the program until time runs out
+    while SIM_TIME >= time:
+        time += DT
+
+        # Generate commands (random)
+        u = calc_input(time)
+
+        # Mimic observing sensory data inputs into the rover 
+        xTrue, z, xDR, ud = observation(xTrue, xDR, u, RFID)
+
+        # Generate posterior estimation through the fast slam algo
+        particles = fast_slam1(particles, ud, z)
+
+        xEst = calc_final_state(particles)
+
+        x_state = xEst[0: STATE_SIZE]
+
+        # store data history
+        hxEst = np.hstack((hxEst, x_state))
+        hxDR = np.hstack((hxDR, xDR))
+        hxTrue = np.hstack((hxTrue, xTrue))
+
+        if show_animation:  # pragma: no cover
+            plt.cla()
+            # for stopping simulation with the esc key.
+            plt.gcf().canvas.mpl_connect('key_release_event',
+                    lambda event: [exit(0) if event.key == 'escape' else None])
+            plt.plot(RFID[:, 0], RFID[:, 1], "*k")
+
+            for i in range(N_PARTICLE):
+                plt.plot(particles[i].x, particles[i].y, ".r")
+                plt.plot(particles[i].lm[:, 0], particles[i].lm[:, 1], "xb")
+
+            plt.plot(hxTrue[0, :], hxTrue[1, :], "-b")
+            plt.plot(hxDR[0, :], hxDR[1, :], "-k")
+            plt.plot(hxEst[0, :], hxEst[1, :], "-r")
+            plt.plot(xEst[0], xEst[1], "xk")
+            plt.axis("equal")
+            plt.grid(True)
+            plt.pause(0.001)
+       
+
+if __name__ == '__main__':
+    main()
