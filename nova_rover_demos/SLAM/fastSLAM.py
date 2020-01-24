@@ -107,7 +107,7 @@ Function: calc_imput
     to rotate in a circle
 
 Parameters: 
-    time - TODO: Update this properly  
+    time - used as simulation time to mimic real life inputs
 '''
 
 def calc_input(time):
