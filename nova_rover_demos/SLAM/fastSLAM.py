@@ -102,6 +102,28 @@ def motion_model(x, u):
 
 
 '''
+Function: calc_imput
+    This function mimics the vehicle commands. In this case it is instructed 
+    to rotate in a circle
+
+Parameters: 
+    time - TODO: Update this properly  
+'''
+
+def calc_input(time):
+    if time <= 3.0:  # cwait at first
+        v = 0.0
+        yawrate = 0.0
+    else:
+        v = 1.0  # [m/s]
+        yawrate = 0.1  # [rad/s]
+
+    u = np.array([v, yawrate]).reshape(2, 1)
+
+    return u
+
+
+'''
 Function: pi_2_pi
     A function to convert angle into the first quadrant 
 
