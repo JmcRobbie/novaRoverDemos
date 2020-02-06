@@ -13,11 +13,23 @@ import math
 import matplotlib.pyplot as plt
 import numpy as np
 
-# Fast SLAM covariance
+
+"""
+Fast SLAM covariance
+
+Q
+[[9.         0.        ]
+ [0.         0.03046174]]
+ 
+R
+[[1.         0.        ]
+ [0.         0.12184697]]
+
+"""
 Q = np.diag([3.0, np.deg2rad(10.0)]) ** 2
 R = np.diag([1.0, np.deg2rad(20.0)]) ** 2
 
-#  Simulation parameter
+#  Simulation parameterz
 Q_sim = np.diag([0.3, np.deg2rad(2.0)]) ** 2
 R_sim = np.diag([0.5, np.deg2rad(10.0)]) ** 2
 OFFSET_YAW_RATE_NOISE = 0.01
@@ -27,7 +39,7 @@ SIM_TIME = 50.0  # simulation time [s]
 MAX_RANGE = 20.0  # maximum observation range
 M_DIST_TH = 2.0  # Threshold of Mahalanobis distance for data association.
 STATE_SIZE = 3  # State size [x,y,yaw]
-LM_SIZE = 2  # LM srate size [x,y]
+LM_SIZE = 2  # LM state size [x,y]
 N_PARTICLE = 100  # number of particle
 NTH = N_PARTICLE / 1.5  # Number of particle for re-sampling
 
@@ -37,10 +49,16 @@ show_animation = True
 class Particle:
 
     def __init__(self, N_LM):
-        self.w = 1.0 / N_PARTICLE
+        self.w = 1.0 / N_PARTICLE # particles have uniform weights when they are initialized
         self.x = 0.0
         self.y = 0.0
         self.yaw = 0.0
+        """
+        P
+        [[1. 0. 0.]
+        [0. 1. 0.]
+        [0. 0. 1.]]
+        """
         self.P = np.eye(3)
         # landmark x-y positions
         self.lm = np.zeros((N_LM, LM_SIZE))
