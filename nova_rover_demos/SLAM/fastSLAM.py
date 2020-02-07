@@ -64,7 +64,7 @@ def fast_slam1(particles, u, z):
     
     particles = predict_particles(particles, u)
 
-    # update with observationss
+    # update with observations
 
     particles = resampling(particles) 
 
@@ -121,6 +121,50 @@ def calc_input(time):
     u = np.array([v, yawrate]).reshape(2, 1)
 
     return u
+
+
+def observation(xTrue, xd, u, RFID):
+    # calc true state
+    xTrue = motion_model(xTrue, u)
+
+    # add noise to range observation
+    z = np.zeros((3, 0))
+    for i in range(len(RFID[:, 0])):
+
+        dx = RFID[i, 0] - xTrue[0, 0]
+        dy = RFID[i, 1] - xTrue[1, 0]
+        d = math.hypot(dx, dy)
+        angle = pi_2_pi(math.atan2(dy, dx) - xTrue[2, 0])
+        if d <= MAX_RANGE:
+            dn = d + np.random.randn() * Qsim[0, 0] ** 0.5  # add noise
+            anglen = angle + np.random.randn() * Qsim[1, 1] ** 0.5  # add noise
+            zi = np.array([dn, pi_2_pi(anglen), i]).reshape(3, 1)
+            z = np.hstack((z, zi))
+
+    # add noise to input
+    ud1 = u[0, 0] + np.random.randn() * Rsim[0, 0] ** 0.5
+    ud2 = u[1, 0] + np.random.randn() * Rsim[1, 1] ** 0.5 + OFFSET_YAWRATE_NOISE
+    ud = np.array([ud1, ud2]).reshape(2, 1)
+
+    xd = motion_model(xd, ud)
+
+    return xTrue, z, xd, ud
+
+
+def motion_model(x, u):
+    F = np.array([[1.0, 0, 0],
+                  [0, 1.0, 0],
+                  [0, 0, 1.0]])
+
+    B = np.array([[DT * math.cos(x[2, 0]), 0],
+                  [DT * math.sin(x[2, 0]), 0],
+                  [0.0, DT]])
+
+    x = F @ x + B @ u
+
+    x[2, 0] = pi_2_pi(x[2, 0])
+
+    return x
 
 
 '''
