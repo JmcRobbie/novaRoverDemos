@@ -122,7 +122,11 @@ def calc_final_state(particles):
 
 def predict_particles(particles, u):
     """
-    
+    Function: predict_particles
+        For each particle, it's state is updated with the motion model.
+        
+    Input: All the particles in existance and the rover input
+    Output: The updated particles
     """
     for i in range(N_PARTICLE):
         px = np.zeros((STATE_SIZE, 1))
@@ -139,6 +143,15 @@ def predict_particles(particles, u):
 
 
 def add_new_lm(particle, z, Q_cov):
+    """
+    Function: add_new_lm
+        This function adds an unobserved landmark to a particle.
+        
+    Input: 
+        particle: The particle where the lm is added
+        z:        Input from sensors, a 3 * 1 matrix in the format [distance, angle to LM, LMId]T
+        Q_cov:    The covariance matrix
+    """
     r = z[0]
     b = z[1]
     lm_id = int(z[2])
@@ -146,6 +159,7 @@ def add_new_lm(particle, z, Q_cov):
     s = math.sin(pi_2_pi(particle.yaw + b))
     c = math.cos(pi_2_pi(particle.yaw + b))
 
+    # Breakdown r by their respective horizontal and vertical distances
     particle.lm[lm_id, 0] = particle.x + r * c
     particle.lm[lm_id, 1] = particle.y + r * s
 
@@ -260,11 +274,32 @@ def proposal_sampling(particle, z, Q_cov):
 
 
 def update_with_observation(particles, z):
+    """
+    Function: update_with_observation
+        The particles are updated using observations z. We mainly update the weights of each particle based on how likely the     
+        particle to have the correct ose given the sensor measurement.
+    
+    Input:
+        the particles
+        z: input from sensors in the format of a 3 * len(RFID) matrix. 
+        e.g. [
+              [distance to lm0, distance to lm1, distance to lm2],
+              [angle to lm0,    angle to lm1,    angle to lm2   ],
+              [0,               1,               2              ]
+             ]
+         where the 3rd column is the id of the landmark
+
+    Output: Particles with updated weights
+    """
     for iz in range(len(z[0, :])):
         lmid = int(z[2, iz])
 
         for ip in range(N_PARTICLE):
             # new landmark
+            """
+            lm is a matrix with dimensions of N_LM * LM_SIZE
+            0.01 is the threshold of likelihood, which is between 0 and 1
+            """
             if abs(particles[ip].lm[lmid, 0]) <= 0.01:
                 particles[ip] = add_new_lm(particles[ip], z[:, iz], Q)
             # known landmark
@@ -354,6 +389,9 @@ def observation(xTrue, xd, u, RFID):
     xTrue = motion_model(xTrue, u)
 
     # add noise to range observation
+    """
+    Initially, z is a matrix with 3 rows but 0 cols, []
+    """
     z = np.zeros((3, 0))
 
     for i in range(len(RFID[:, 0])):
@@ -369,6 +407,9 @@ def observation(xTrue, xd, u, RFID):
             anglen = angle + np.random.randn() * Q_sim[1, 1] ** 0.5  # add noise
             # zi is the np array with tones of noise in it
             zi = np.array([dn, pi_2_pi(anglen), i]).reshape(3, 1)
+            """
+            Location of each landmark is horizontally appended as a new col
+            """
             z = np.hstack((z, zi))
 
     # add noise to input

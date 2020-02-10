@@ -102,7 +102,7 @@ def motion_model(x, u):
 
 
 '''
-Function: calc_imput
+Function: calc_input
     This function mimics the vehicle commands. In this case it is instructed 
     to rotate in a circle
 
@@ -141,6 +141,7 @@ def observation(xTrue, xd, u, RFID):
             dn = d + np.random.randn() * Qsim[0, 0] ** 0.5  # add noise
             anglen = angle + np.random.randn() * Qsim[1, 1] ** 0.5  # add noise
             zi = np.array([dn, pi_2_pi(anglen), i]).reshape(3, 1)
+            # stack the arrays horizontally
             z = np.hstack((z, zi))
 
     # add noise to input
