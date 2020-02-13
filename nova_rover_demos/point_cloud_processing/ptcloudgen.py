@@ -1,12 +1,12 @@
-'''
+"""
 ptcloudgen.py
 
 A class that generates dummy point clouds in accordance with user configurations.
 The point clouds are designed to be mappable to a surface in order to be coherently
 processable by processes.
 
-Author: Jack McRobbie
-'''
+Author: Jack McRobbie and Xinpu Cheng
+"""
 
 # Changelog: 
 '''
@@ -23,15 +23,16 @@ from matplotlib import pyplot
 from mpl_toolkits.mplot3d import Axes3D
 
 
-class PointCloudGen: 
+class PointCloudGen:
     '''
-    This class contains the following instance variables: 
-    size: The bounds on the range of the point cloud values. It's a list of n tuples where n is the number of dimensions, 
-        eg. [(-1,1),(-2,5)], 
-    ptcloud: TODO(Fill the details here), 
-    dims: The number of dimensions involved, 
-    var: TODO(Fill the details here), 
-    num_features, 
+    This class contains the following instance variables:
+    size: The bounds on the range of the point cloud values. It's a list of n tuples where n is the number of dimensions,
+        eg. [(-1,1),(-2,5)],
+    ptcloud: A list of lists of the points in x, y, z coordinates,
+    occupancy: Features/Obstacles represented as x, y coordinates (Any value that is non-zero is considered a(n) feature/obstacle),
+    series: A series of features/obstacles represented as a list of tuples with grid resolution taken into consideration,
+    dims: The number of dimensions involved,
+    num_features,
     num_points.
     '''
     
@@ -39,8 +40,7 @@ class PointCloudGen:
         '''
         NOTE: All units and measurements are in SI units.
         '''
-        if not(pt == []): 
-            self.ptcloud = pt
+        self.ptcloud = pt
         
         self.dims = len(size)
         if self.dims == 0 or self.dims > 3:
@@ -102,34 +102,62 @@ class PointCloudGen:
         pyplot.show()
 
     def _gen_2D_steps(self, x_res, y_res):
-        x_size = self.size[0][0]
-        y_size = self.size[0][1]
-        xSteps = int(abs(x_size - y_size) / x_res)
-        ySteps = int(abs(self.size[1][0] - self.size[1][1]) / y_res)
+        x_lower = self.size[0][0]
+        x_upper = self.size[0][1]
+        y_lower = self.size[1][0]
+        y_upper = self.size[1][1]
+        xSteps = int(abs(x_lower - x_upper) / x_res)
+        ySteps = int(abs(y_lower - y_upper) / y_res)
         
         return (xSteps, ySteps)
     
-    def get_occupancy_grid(self, x_res, y_res):
+    def get_occupancy_grid(self, x_res, y_res, get_occupancy_in_series=False):
         '''
         Returns an occupancy grid of the point cloud over the relevant range.
         Occupancy is computed based on a heuristic that can be configured.
         '''
         xSteps, ySteps = self._gen_2D_steps(x_res, y_res)
-        obstacleCloud = self.ptcloud[np.where(self.ptcloud[:, 2] > 0.2)] #TODO: 0.2 is a magic number, explain
-        self.occupancy = np.zeros([xSteps, ySteps])  # construct occupancy grid
+        # Anything that's above 20 cm is considered an obstacle
+        obstacleCloud = self.ptcloud[np.where(self.ptcloud[:, 2] > 0.2)]
+        self.occupancy = np.zeros([xSteps, ySteps])  # Construct occupancy grid
         
         for point in obstacleCloud:
             xc = int(point[0] / x_res)
             yc = int(point[1] / y_res)
             self.occupancy[xc][yc] = self.occupancy[xc][yc] + point[2]
-            if self.occupancy[xc][yc] > 10.0: #TODO: 10.0 is a magic number, explain, is it a maximum threshold/limit?
+            # 10.0 is a maximum threshold/limit
+            if self.occupancy[xc][yc] > 10.0:
                 self.occupancy[xc][yc] = 10.0
-                
+
+        if get_occupancy_in_series:
+            self.series = self._get_occupancy_in_series(x_res, y_res)
+
         return self.occupancy
-    
+
+    def _get_occupancy_in_series(self, x_res, y_res):
+        '''
+        Convert the occupancy grid into a series of points, i.e., a list of tuples of x, y coordinates
+        Requirement: self.occupancy (Occupancy grid representation)
+        Note: The rover's relative position is assumed to be at point (size[0][0], size[1][0])
+        '''
+        x_shift = self.size[0][0]
+        y_shift = self.size[1][0]
+        result = []
+        x_pos = 0
+
+        for row_data in self.occupancy:
+            y_pos = 0
+            for col_value in row_data:
+                if col_value != 0:
+                    result.append((x_pos * x_res + x_shift, y_pos * y_res + y_shift))
+                y_pos += 1
+            x_pos += 1
+
+        return result
+
     def meanHeightGenerator(self, x_res, y_res):
         xSteps, ySteps = self._gen_2D_steps(x_res, y_res)
-        self.average = np.zeros([xSteps, ySteps])  # construct occupancy grid
+        self.average = np.zeros([xSteps, ySteps])  # Construct occupancy grid
         count_grid = np.zeros([xSteps, ySteps])
         sum_grid = np.zeros([xSteps, ySteps])
         
@@ -219,7 +247,12 @@ def test_occupancy_grid():
     size = [(0, 1), (0, 2), (0, 5)]
     cld = PointCloudGen(size, 1)
     cld.gaussian_cloud()
-    cld.get_occupancy_grid(0.05, 0.05)
+    cld.get_occupancy_grid(0.05, 0.05, True)
+    print("Ptcloud coordinates:", cld.ptcloud)
+    print("Occupancy grid coordinates:", cld.occupancy)
+    print("Occupancy length:", cld.occupancy.shape)
+    print("Ptcloud length:", cld.ptcloud.shape)
+    print("Series of points:", cld.series)
     cld.plot_occupancy_grid()
     cld.plot_cloud()
 
@@ -238,4 +271,6 @@ def test_numpy_constructor():
     
 
 if __name__ == '__main__':
+    test_occupancy_grid()
+    test_ptcloud()
     test_numpy_constructor()
