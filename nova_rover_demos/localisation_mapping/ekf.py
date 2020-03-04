@@ -4,7 +4,7 @@ Extended kalman filter (EKF) localization sample
 
 author: Atsushi Sakai (@Atsushi_twi)
 
-Adapted for the Melbourne Space Program by Jack McRobbie
+Adapted for the Melbourne Space Program by Jack McRobbie and Cheston Chow
 
 """
 
@@ -27,16 +27,6 @@ GPS_NOISE = np.diag([0.5, 0.5])**2
 
 DT = 0.1  # time tick [s]
 SIM_TIME = 50.0  # simulation time [s]
-
-show_animation = True
-
-
-def calc_input(x_current = 0, x_desired= 0): ## Calculate the desired motion
-    v = 1.0  # [m/s]
-    yawrate = -0.1  # [rad/s]
-    u = np.array([[v], [yawrate]])
-    return u
-
 
 def observation(xTrue, xd, u):
 
@@ -159,8 +149,10 @@ def plot_covariance_ellipse(xEst, PEst):  # pragma: no cover
     px = np.array(fx[0, :] + xEst[0, 0]).flatten()
     py = np.array(fx[1, :] + xEst[1, 0]).flatten()
     plt.plot(px, py, "--r")
+    return xEst, a, b
 
-def ekf_run():
+def ekf_run(show_animation=False):
+
     time = 0.0
 
     # State Vector [x y yaw v]'
@@ -178,11 +170,17 @@ def ekf_run():
 
     while SIM_TIME >= time:
         time += DT
-        u = calc_input()
+        # [[v], [yawrate]] where v in ms^-1 and yawrate in rads^-1
+        v = np.random.rand() # [0, 1)
+        yawrate = 1*np.random.randn()
+
+        u = np.array([[v], [yawrate]])
 
         xTrue, z, xDR, ud = observation(xTrue, xDR, u)
 
         xEst, PEst = ekf_estimation(xEst, PEst, z, ud)
+
+        print(v, xEst[2], INPUT_NOISE[0,0], INPUT_NOISE[1,1], GPS_NOISE[0,0], GPS_NOISE[1,1], np.linalg.norm(xTrue[0:1]-xEst[0:1]))
 
         # store data history
         hxEst = np.hstack((hxEst, xEst))
@@ -193,17 +191,17 @@ def ekf_run():
         if show_animation:
             plt.cla()
             plt.plot(hz[0, :], hz[1, :], ".g")
-            plt.plot(hxTrue[0, :].flatten(),
-                     hxTrue[1, :].flatten(), "-b")
             plt.plot(hxDR[0, :].flatten(),
                      hxDR[1, :].flatten(), "-k")
             plt.plot(hxEst[0, :].flatten(),
                      hxEst[1, :].flatten(), "-r")
+            plt.plot(hxTrue[0, :].flatten(),
+                     hxTrue[1, :].flatten(), "-b")
             plot_covariance_ellipse(xEst, PEst)
             plt.axis("equal")
             plt.grid(True)
-            plt.pause(0.001)
+            plt.pause(0.0001)
 
 
 if __name__ == '__main__':
-    ekf_run()
+    ekf_run(show_animation=True)

@@ -20,6 +20,8 @@ Follow [PEP8](https://www.python.org/dev/peps/pep-0008/) style guide conventions
 
 ### Unit tests
 Before a feature can be merged into master, unit tests must be written to validate the correctness of the feature. Tests should be included in the `tests/` sub-directory and be named `test_<feature name>.py`
+Unit tests would be run by `pytest` in the clone directory, which can installed using
+``` pip install -U pytest ```
 
 ### Python packages
 To create a python package in a sub-directory, include a file in the directory called `__init__.py`. This defines the directory as a package and allows it to be directly imported as `from <package> import <module>`. When a regular package is imported, this ``__init__.py`` file is implicitly executed, and the objects it defines are bound to names in the package’s namespace.
