@@ -21,7 +21,7 @@ import numpy as np
 import random as rn
 from matplotlib import pyplot
 from mpl_toolkits.mplot3d import Axes3D
-
+from itertools import product, combinations
 
 class PointCloudGen:
     '''
@@ -386,6 +386,8 @@ class PointCloudGen:
                     
         pass
     
+    def getObstacles(self):
+        pass
     def plot_ground_plane(self):
         fig = pyplot.figure()
         ax = Axes3D(fig)
