@@ -195,95 +195,145 @@ class PointCloudGen:
     # 
     
     def calculateSegment(self, x, y, seg_size):
-        # casting to int is faster than rounding (~3x)
         return int(np.arctan2(y,x) / seg_size)
     
-    def calculateDistance(self, x, y):
-        return math.sqrt(x**2 + y**2)
-
+    def calculateDistance(self, p1, p2):
+        return math.sqrt((p1[0]-p2[0])**2 + (p1[1]-p2[1])**2)
+    
+    def cylindricalToCartesian(self, r, theta, z):
+        return [r*np.math.cos(theta), r*np.math.sin(theta), z]
+        
     def fitLine(self, points):
         '''
         Uses least squares fit\\
         Points must be numpy array
         '''
-        a = np.vstack([x, np.ones(len(x))]).T
-        return np.dot(np.linalg.inv(np.dot(a.T, a)), np.dot(a.T, y))
+        
+        if np.isfinite(np.linalg.cond(points)):
+            # Invertible
+            x = points[:,0]
+            y = points[:,1]
+
+            a = np.vstack([x, np.ones(len(x))]).T
+            return np.dot(np.linalg.inv(np.dot(a.T, a)), np.dot(a.T, y))
+        else:
+            # Not invertible
+            return (0, points[0][0])
+    
         
     def fitError(self, m, b, points):
+        '''
+        Returns RMS error for given fit
+        '''
         predictions = points[:,1]
         targets = [m*x + b for x in points[:,0]]
         return np.sqrt(((predictions - targets) ** 2).mean())
     
     def getPrototypePoint(self,points):
         '''
-        Uses heuristic to map set of points to a single one \\
-        Best for ground plane extraction is taking the min
+        Uses heuristic to map set of points to a single 'prototype' point \\
+        Best for ground plane extraction is taking the min (see paper)
         '''
         min_i = np.argmin(points[:,1])
         return points[min_i]
+
+    def distPointLine(self, point ,m,b):
+        '''
+        Returns min distance between point and line using basic geometry
+        '''
+        x_int = m/(m**2+1)*(point[1]-b+(point[0]/m))
+        y_int = m*x_int+b
+        
+        return self.calculateDistance((point[0],point[1]), (x_int, y_int))
     
-    def distpointline(self, point, m, b):
-        return abs(point[1] - m*point[0] + b)
-    
-    def isGroundPoint(self, x, y, line_segments, ground_distance_threshold):
+        
+    def isGroundPoint(self, r, z, line_segments, ground_distance_threshold,):
+        '''
+        Checks to see if point is on ground using extracted line segments for given angular segment\\
+        If distance to closest line segment is less than ground_distance_threshold => point lies on ground
+        In cylindrical space where theta is fixed for given segment
+        
+        TODO: As per paper, immediately label point as non ground if 'far' from nearest line segment 
+        '''
         # Find closest line segment
-        # endpoint_pairs = np.array([[m*x+b, ]])
         
+        if(line_segments is None or len(line_segments) <= 0):
+            return False
+
+        endpoint_pairs = np.transpose(line_segments[:,2:3])
         
-        # int(np.argmin(a) / 2)
+        closestLine_i = 0
+        closestLineDist = np.inf
+        for i, end_point_pairs in enumerate(endpoint_pairs):
+            for end_point in end_point_pairs:
+                if(self.calculateDistance(end_point, (r,z)) < closestLineDist):
+                    closestLine_i = i
+                    
+        # Check if distance to line is below threshold
+        dist_to_line = self.distPointLine((r,z), line_segments[closestLine_i][0], line_segments[closestLine_i][1])
         
-        # for l in line_segments:
-        #     m = line_segments[0]
-        #     b = line_segments[1]
-            
-            
+        if(dist_to_line <= ground_distance_threshold):
+            return True
+        else:
+            return False
     
     def extractSegmentLines(self, bins, slope_range, plateu_threshold, rmse_threshold, line_endpoint_threshold):
         '''
         Takes in bins for given segment (along with parameters)\\
-        Returns list of line segments described by their gradient and intercept (m,b) for a given angular segment
+        Returns list of line segments described by tuple => (m, b, x0, x1)
         Main idea is to model the the distribution of prototype points along the segment bins with the least number of line segments 
         '''
-        n_bins = len(segment_bins)
+        n_bins = len(bins)
         
         c = 0
-        line_segments = np.array([])
-        points_to_fit = np.array([])
+        line_segments = []
+        points_to_fit = []
         
-        for i in range(n_bins):
-            bin_points = np.array(segment_bins[i])
+        for i, (bin_i,points) in enumerate(bins.items()):
+            bin_points = np.array(points)
             
             if bin_points is not None and len(bin_points) > 0:
-                if len(segment_points) >= 2:     
-                    points_to_fit_with_prototype = points_to_fit + np.array([getPrototypePoint(bin_points)])
-                    
+                if len(points_to_fit) >= 2:     
+                    points_to_fit_with_prototype = np.array([self.getPrototypePoint(bin_points)] + points_to_fit)                     
                     (m, b) = self.fitLine(points_to_fit_with_prototype)
                     
                     if(abs(m) <= slope_range[1] and (abs(m) > slope_range[1] or abs(b) <= plateu_threshold) \
-                         and self.fitError(m,b, points_to_fit_with_prototype) <= rmse_threshold):
+                         and self.fitError(m,b, points_to_fit_with_prototype) <= rmse_threshold):       
+                        # print("Point is inline with previous points")
                         points_to_fit = points_to_fit_with_prototype
+                        
+                        if(i==len(bins)-1):
+                            # If last element and fits, make a line segment
+                            x0 = points_to_fit[0][0]
+                            x1 = points_to_fit[len(points_to_fit)-1][0]
+                            line_segments += [(m,b,(x0,m*x0+b), (x1, m*x1+b))]
                     else:
-                        (m, b) = self.fitLine(points_to_fit)
-                        line_segments += [(m,b)]
-                        c += 1
-                        points_to_fit = 0
-                        i -= 1
-                else:
-                    if(c == 0 or points_to_fit == 0 or self.distpointline(getPrototypePoint(bin_points)) < line_endpoint_threshold):
-                        points_to_fit += [getPrototypePoint(bin_points)]
-        return  line_segments     
-            
-                
-        
+                        # print("Finish line segment")
+                        (m, b) = self.fitLine(np.array(points_to_fit))
+                        
+                        # Get radial range for line
+                        x0 = points_to_fit[0][0]
+                        x1 = points_to_fit[len(points_to_fit)-1][0]
+                        
+                        line_segments += [(m,b,(x0,m*x0+b), (x1, m*x1+b))]
 
-    def groundPlaneComputation(self, n_seg = 10, n_bins = 10, radial_range = [0,3], slope_range = [2, 5], 
-                               plateu_threshold = 10, rmse_threshold = 1, line_endpoint_threshold = 10):
+                        c += 1
+                        points_to_fit = []
+                        bin_i -= 1
+                else:
+                    if(c == 0 or points_to_fit == 0 or self.distPointLine(self.getPrototypePoint(bin_points), line_segments[c-1][0], line_segments[c-1][1]) < line_endpoint_threshold):
+                        points_to_fit += [self.getPrototypePoint(bin_points)]
+        return np.array(line_segments)     
+            
+    def groundPlaneComputation(self, n_seg = 50, n_bins = 15, radial_range = [0,5], slope_range = [-1, 2], 
+                               plateu_threshold = 1, rmse_threshold = 1, line_endpoint_threshold = 1, ground_distance_threshold = 0.05):
         '''
-        Calculates ground plane, returning a boolean filled occupancy grid.\\
+        Calculates self.ground_plane, returning a boolean filled occupancy grid.\\
         Implementation of paper: https://ieeexplore.ieee.org/document/5548059 \\
         Main idea is reducing points from point cloud into a discrete cylindrical space for fast 2D line extraction.
         This allows one to compare the original point cloud with the extracted lines and using thresholds, determine points belonging to ground plane
         
+        Parameters:\\
         n_seg: number of angular steps \\
         n_bins: number of radial steps per segment \\
         radial_range: min,max radial values for grouping points into a bin of a given segment \\
@@ -291,9 +341,15 @@ class PointCloudGen:
         plateu_threshold: if m < slope_range.min and b < plateu_threshold => edge of plateu \\
         rmse_threshold: used as an error threshold in line fitting  \\  
         line_endpoint_threshold: lines with endpoints on the same bin must not have a difference in endpoint height being greater than this threshold \\
+        ground_distance_threshold: distance from closest line segment that point has to be for it to be considered ground plane\\
+            
+        Returns:\\
+        void (populates self.ground_plane instead)
         '''        
         seg_size =  2*np.math.pi / n_seg
         bin_size = np.abs(radial_range[1] - radial_range[0]) / n_bins
+
+        self.ground_plane = []
 
         # Group points by segment
         segments = {}
@@ -306,21 +362,47 @@ class PointCloudGen:
         # Group points by bin
         bins = {} # first index is segment, second index is bin
         for i,k in enumerate(segments):
-            print("Binning in Segment #{}\n".format(k))
+            # print("Binning in Segment #{}\n".format(k))
             if bins.get(k) is None:
                 bins[k] = {}
             for p in segments[k]:
-                radial_dist = self.calculateDistance(p[0], p[1])
+                radial_dist = self.calculateDistance(p, (0,0))
                 bin_i = int(radial_dist / bin_size)
                 if(bins[k].get(bin_i) is None):
                     bins[k][bin_i] = []
-                bins[k][bin_i] += [radial_dist, p[2]]
+                bins[k][bin_i] += [[radial_dist, p[2]]] # Store point in bin as (radial_dist, z-val)
         
-            # Line Extraction
+            # Extract lines from segment
             segment_lines = self.extractSegmentLines(bins[k], slope_range, plateu_threshold, rmse_threshold, line_endpoint_threshold)
 
-
+            print("Segment: {} | # of Lines: {}".format(k, len(segment_lines)))
+            
+            # # Label points using extracted line segments 
+            for p in segments[k]:
+                radial_dist = self.calculateDistance(p, (0,0))
+        
+                if(self.isGroundPoint(radial_dist, p[2], segment_lines, ground_distance_threshold)):
+                    self.ground_plane += [[p[0], p[1], p[2]+0.05]]
+                    
         pass
+    
+    def plot_ground_plane(self):
+        fig = pyplot.figure()
+        ax = Axes3D(fig)
+        x = self.ptcloud[:, 0]
+        y = self.ptcloud[:, 1]
+        z = self.ptcloud[:, 2]
+        
+        g_plane = np.array(self.ground_plane)
+    
+        gx = g_plane[:,0]
+        gy = g_plane[:,1]
+        gz = g_plane[:,2]
+        
+        ax.scatter(x, y, z, s=10, c='r', marker="d")
+        ax.scatter(gx, gy, gz , s=10, c='b', marker="s")
+        
+        pyplot.show()
 
     def plot_gradient_grid(self):
         '''
@@ -397,11 +479,11 @@ def test_ptcloud():
 
 def test_ground_plane_extraction():
     size = [(0, 2), (0, 2), (0, 2)]
-    cld = PointCloudGen(size, 1, num_points=100)
-    cld.getPrototypePoint(np.array([[2,6], [1,5], [1,7]]))
-    # cld.gaussian_cloud()
-    # cld.plot_cloud()
-    # cld.groundPlaneComputation()
+    cld = PointCloudGen(size, 1, num_points=3000)
+    cld.gaussian_cloud()
+    cld.groundPlaneComputation()
+    cld.plot_ground_plane()
+
 
 def test_numpy_constructor():
     arr = np.random.rand(100, 3)
