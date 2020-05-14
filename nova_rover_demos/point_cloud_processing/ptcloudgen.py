@@ -22,6 +22,7 @@ import random as rn
 from matplotlib import pyplot
 from mpl_toolkits.mplot3d import Axes3D
 from itertools import product, combinations
+from sklearn.cluster import DBSCAN
 
 class PointCloudGen:
     '''
@@ -325,8 +326,8 @@ class PointCloudGen:
                         points_to_fit += [self.getPrototypePoint(bin_points)]
         return np.array(line_segments)     
             
-    def groundPlaneComputation(self, n_seg = 50, n_bins = 15, radial_range = [0,5], slope_range = [-1, 2], 
-                               plateu_threshold = 1, rmse_threshold = 1, line_endpoint_threshold = 1, ground_distance_threshold = 0.05):
+    def groundPlaneComputation(self, n_seg = 50, n_bins = 15, radial_range = [0,5], slope_range = [-1, 1], 
+                               plateu_threshold = 1, rmse_threshold = 1, line_endpoint_threshold = 1, ground_distance_threshold = 0.1):
         '''
         Calculates self.ground_plane, returning a boolean filled occupancy grid.\\
         Implementation of paper: https://ieeexplore.ieee.org/document/5548059 \\
@@ -350,6 +351,8 @@ class PointCloudGen:
         bin_size = np.abs(radial_range[1] - radial_range[0]) / n_bins
 
         self.ground_plane = []
+        self.obstacle_plane = []
+        
 
         # Group points by segment
         segments = {}
@@ -383,11 +386,57 @@ class PointCloudGen:
         
                 if(self.isGroundPoint(radial_dist, p[2], segment_lines, ground_distance_threshold)):
                     self.ground_plane += [[p[0], p[1], p[2]+0.05]]
-                    
-        pass
+                else:
+                    self.obstacle_plane += [[p[0], p[1], p[2]+0.05]]
+        return
     
-    def getObstacles(self):
-        pass
+    
+    def drawCylinder(self, ax, center_x,center_y,radius,height_z):
+        z = np.linspace(0, height_z, 50)
+        theta = np.linspace(0, 2*np.pi, 50)
+        theta_grid, z_grid=np.meshgrid(theta, z)
+        x_grid = radius*np.cos(theta_grid) + center_x
+        y_grid = radius*np.sin(theta_grid) + center_y
+        ax.plot_surface(x_grid, y_grid, z_grid, alpha=0.5)
+
+    def extractObstacles(self):
+        '''
+        Maps to 2D, performs DBSCAN clustering and models obstacles as cylinders
+        Requires: self.obstacle_plane
+        Returns: list of obstacles as (center, radius)  
+        '''
+        
+        obstacle_plane_2d = [(x,y) for x,y,z in self.obstacle_plane]
+        
+        # Compute DBSCAN
+        db = DBSCAN(eps=2, min_samples=10).fit(obstacle_plane_2d)
+        core_samples_mask = np.zeros_like(db.labels_, dtype=bool)
+        core_samples_mask[db.core_sample_indices_] = True
+        labels = db.labels_
+
+        # Number of clusters in labels, ignoring noise if present.
+        n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
+        n_noise_ = list(labels).count(-1)
+        
+        print("Objects detected: ", n_clusters_)
+
+        obstacles = []
+
+        for i in range(n_clusters_):
+            # print("Cluster: ", i)
+            
+            points = np.array(obstacle_plane_2d)[np.where(labels == i)]
+            center = (np.average(points[:,0]), np.average(points[:,1]))
+            x_range = max(points[:,0])-min(points[:,0])
+            y_range = max(points[:,1])-min(points[:,1])
+            radius = max([x_range, y_range])/2   
+            # print("Center: ", center)
+            # print("Radius: ", radius )
+            
+            obstacles += [[[center[0], center[1]], radius]]
+
+        return obstacles        
+    
     def plot_ground_plane(self):
         fig = pyplot.figure()
         ax = Axes3D(fig)
@@ -405,6 +454,31 @@ class PointCloudGen:
         ax.scatter(gx, gy, gz , s=10, c='b', marker="s")
         
         pyplot.show()
+        
+    def plot_obstacles(self):
+        fig = pyplot.figure()
+        ax = Axes3D(fig)
+        x = self.ptcloud[:, 0]
+        y = self.ptcloud[:, 1]
+        z = self.ptcloud[:, 2]
+        
+        obstacles = self.extractObstacles()
+        
+        print(obstacles)
+         
+        for i,o in enumerate(obstacles):
+            self.drawCylinder(ax, o[0][0], o[0][1],o[1],1)
+
+        g_plane = np.array(self.ground_plane)
+    
+        gx = g_plane[:,0]
+        gy = g_plane[:,1]
+        gz = g_plane[:,2]
+        
+        ax.scatter(gx, gy, gz , s=10, c='b', marker="s")
+        ax.scatter(x, y, z, s=10, c='r', marker="d")        
+        pyplot.show()
+        
 
     def plot_gradient_grid(self):
         '''
@@ -485,6 +559,13 @@ def test_ground_plane_extraction():
     cld.gaussian_cloud()
     cld.groundPlaneComputation()
     cld.plot_ground_plane()
+    
+def test_obstacle_extraction():
+    size = [(0, 2), (0, 2), (0, 2)]
+    cld = PointCloudGen(size, 1, num_points=3000)
+    cld.gaussian_cloud()
+    cld.groundPlaneComputation()
+    cld.plot_obstacles()
 
 
 def test_numpy_constructor():
@@ -494,7 +575,7 @@ def test_numpy_constructor():
     
 
 if __name__ == '__main__':
-    test_ground_plane_extraction()
+    test_obstacle_extraction()
     # test_occupancy_grid()
     # # test_ptcloud()
     # # test_numpy_constructor()
