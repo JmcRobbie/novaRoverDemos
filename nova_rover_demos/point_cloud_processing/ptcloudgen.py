@@ -326,8 +326,8 @@ class PointCloudGen:
                         points_to_fit += [self.getPrototypePoint(bin_points)]
         return np.array(line_segments)     
             
-    def groundPlaneComputation(self, n_seg = 50, n_bins = 15, radial_range = [0,5], slope_range = [-1, 1], 
-                               plateu_threshold = 1, rmse_threshold = 1, line_endpoint_threshold = 1, ground_distance_threshold = 0.1):
+    def groundPlaneComputation(self, n_seg = 50, n_bins = 15, radial_range = [0,5], slope_range = [-1, 2], 
+                               plateu_threshold = 1, rmse_threshold = 1, line_endpoint_threshold = 1, ground_distance_threshold = 0.06):
         '''
         Calculates self.ground_plane, returning a boolean filled occupancy grid.\\
         Implementation of paper: https://ieeexplore.ieee.org/document/5548059 \\
@@ -409,7 +409,7 @@ class PointCloudGen:
         obstacle_plane_2d = [(x,y) for x,y,z in self.obstacle_plane]
         
         # Compute DBSCAN
-        db = DBSCAN(eps=2, min_samples=10).fit(obstacle_plane_2d)
+        db = DBSCAN(eps=0.1, min_samples=10).fit(obstacle_plane_2d)
         core_samples_mask = np.zeros_like(db.labels_, dtype=bool)
         core_samples_mask[db.core_sample_indices_] = True
         labels = db.labels_
@@ -562,7 +562,7 @@ def test_ground_plane_extraction():
     
 def test_obstacle_extraction():
     size = [(0, 2), (0, 2), (0, 2)]
-    cld = PointCloudGen(size, 1, num_points=3000)
+    cld = PointCloudGen(size, 2, num_points=1000)
     cld.gaussian_cloud()
     cld.groundPlaneComputation()
     cld.plot_obstacles()
@@ -575,7 +575,8 @@ def test_numpy_constructor():
     
 
 if __name__ == '__main__':
-    test_obstacle_extraction()
+    test_ground_plane_extraction()
+    # test_obstacle_extraction()
     # test_occupancy_grid()
     # # test_ptcloud()
     # # test_numpy_constructor()
