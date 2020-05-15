@@ -575,8 +575,8 @@ def test_numpy_constructor():
     
 
 if __name__ == '__main__':
-    test_ground_plane_extraction()
-    # test_obstacle_extraction()
+    # test_ground_plane_extraction
+    test_obstacle_extraction()
     # test_occupancy_grid()
     # # test_ptcloud()
     # # test_numpy_constructor()
