@@ -23,6 +23,8 @@ from matplotlib import pyplot
 from mpl_toolkits.mplot3d import Axes3D
 from itertools import product, combinations
 from sklearn.cluster import DBSCAN
+from matplotlib import collections  as mc
+import pickle
 
 class PointCloudGen:
     '''
@@ -92,6 +94,26 @@ class PointCloudGen:
         self._gen_white_noise()
         
         return
+    
+    def generate2DGaussianCloud(self, n_points = 10, n_features = 2, size = [0,10]):
+        points = np.zeros([n_points,2])
+
+        gaussians = []
+        if n_features is 0:
+            return
+
+        for i in range(n_features):
+            place = np.random.uniform(low=size[0], high=size[1])
+            gaussians.append(place)
+
+        for i in range(n_points):
+            points[i][0] = np.random.uniform(low=size[0], high=size[1])
+            points[i][1] = 0
+            for j in range(n_features):
+                points[i][1] = points[i][1] + \
+                    self._gaussian([gaussians[j], 0], points[i][0], 0, 1.0, (0.1, 0.1))  
+
+        return points
 
     def plot_cloud(self):
         fig = pyplot.figure()
@@ -210,14 +232,14 @@ class PointCloudGen:
         Points must be numpy array
         '''
         
-        if np.isfinite(np.linalg.cond(points)):
+        try:
             # Invertible
             x = points[:,0]
             y = points[:,1]
 
             a = np.vstack([x, np.ones(len(x))]).T
             return np.dot(np.linalg.inv(np.dot(a.T, a)), np.dot(a.T, y))
-        else:
+        except:
             # Not invertible
             return (0, points[0][0])
     
@@ -257,18 +279,21 @@ class PointCloudGen:
         TODO: As per paper, immediately label point as non ground if 'far' from nearest line segment 
         '''
         # Find closest line segment
+        # print("Lines: ", line_segments)
         
         if(line_segments is None or len(line_segments) <= 0):
             return False
 
-        endpoint_pairs = np.transpose(line_segments[:,2:3])
+        endpoint_pairs = [(l[2], l[3]) for i,l in enumerate(line_segments)]
         
         closestLine_i = 0
         closestLineDist = np.inf
         for i, end_point_pairs in enumerate(endpoint_pairs):
             for end_point in end_point_pairs:
-                if(self.calculateDistance(end_point, (r,z)) < closestLineDist):
+                dist = self.calculateDistance(end_point, (r,z))
+                if(dist < closestLineDist):
                     closestLine_i = i
+                    closestLineDist = dist
                     
         # Check if distance to line is below threshold
         dist_to_line = self.distPointLine((r,z), line_segments[closestLine_i][0], line_segments[closestLine_i][1])
@@ -283,50 +308,57 @@ class PointCloudGen:
         Takes in bins for given segment (along with parameters)\\
         Returns list of line segments described by tuple => (m, b, x0, x1)
         Main idea is to model the the distribution of prototype points along the segment bins with the least number of line segments 
-        '''
-        n_bins = len(bins)
-        
+        '''        
         c = 0
         line_segments = []
         points_to_fit = []
         
-        for i, (bin_i,points) in enumerate(bins.items()):
-            bin_points = np.array(points)
+        for i,v in enumerate(bins):
+            bin_points = np.array(v)
             
             if bin_points is not None and len(bin_points) > 0:
                 if len(points_to_fit) >= 2:     
-                    points_to_fit_with_prototype = np.array([self.getPrototypePoint(bin_points)] + points_to_fit)                     
-                    (m, b) = self.fitLine(points_to_fit_with_prototype)
+                    points_to_fit_with_prototype = [self.getPrototypePoint(bin_points)] + points_to_fit 
+                        
+                    (m, b) = self.fitLine(np.array(points_to_fit_with_prototype))
+
+                    # print("Bin #", i)
+                    # print("Points to Fit: ", points_to_fit_with_prototype)
+                    # print("LineFit: ", (m,b))     
+                    # print("RMSE: ", self.fitError(m,b, np.array(points_to_fit_with_prototype)))               
+                    
                     
                     if(abs(m) <= slope_range[1] and (abs(m) > slope_range[1] or abs(b) <= plateu_threshold) \
-                         and self.fitError(m,b, points_to_fit_with_prototype) <= rmse_threshold):       
-                        # print("Point is inline with previous points")
+                         and self.fitError(m,b, np.array(points_to_fit_with_prototype)) <= rmse_threshold):       
                         points_to_fit = points_to_fit_with_prototype
                         
                         if(i==len(bins)-1):
                             # If last element and fits, make a line segment
-                            x0 = points_to_fit[0][0]
-                            x1 = points_to_fit[len(points_to_fit)-1][0]
+                            
+                            x0 = min(np.array(points_to_fit)[:,0])
+                            x1 = max(np.array(points_to_fit)[:,0])
                             line_segments += [(m,b,(x0,m*x0+b), (x1, m*x1+b))]
+       
                     else:
-                        # print("Finish line segment")
                         (m, b) = self.fitLine(np.array(points_to_fit))
                         
                         # Get radial range for line
-                        x0 = points_to_fit[0][0]
-                        x1 = points_to_fit[len(points_to_fit)-1][0]
-                        
-                        line_segments += [(m,b,(x0,m*x0+b), (x1, m*x1+b))]
+                        x0 = min(np.array(points_to_fit)[:,0])
+                        x1 = max(np.array(points_to_fit)[:,0])
 
+                        line_segment = (m,b,(x0,m*x0+b), (x1, m*x1+b))
+                        line_segments += [line_segment]
+                        
                         c += 1
                         points_to_fit = []
-                        bin_i -= 1
+                        i -= 1
                 else:
                     if(c == 0 or points_to_fit == 0 or self.distPointLine(self.getPrototypePoint(bin_points), line_segments[c-1][0], line_segments[c-1][1]) < line_endpoint_threshold):
                         points_to_fit += [self.getPrototypePoint(bin_points)]
+                            
         return np.array(line_segments)     
             
-    def groundPlaneComputation(self, n_seg = 50, n_bins = 15, radial_range = [0,5], slope_range = [-1, 2], 
+    def groundPlaneComputation(self, n_seg = 20, n_bins = 20, radial_range = [0,5], slope_range = [-1, 1], 
                                plateu_threshold = 1, rmse_threshold = 1, line_endpoint_threshold = 1, ground_distance_threshold = 0.06):
         '''
         Calculates self.ground_plane, returning a boolean filled occupancy grid.\\
@@ -365,7 +397,6 @@ class PointCloudGen:
         # Group points by bin
         bins = {} # first index is segment, second index is bin
         for i,k in enumerate(segments):
-            # print("Binning in Segment #{}\n".format(k))
             if bins.get(k) is None:
                 bins[k] = {}
             for p in segments[k]:
@@ -377,17 +408,17 @@ class PointCloudGen:
         
             # Extract lines from segment
             segment_lines = self.extractSegmentLines(bins[k], slope_range, plateu_threshold, rmse_threshold, line_endpoint_threshold)
-
-            print("Segment: {} | # of Lines: {}".format(k, len(segment_lines)))
             
+            print("Segment: {} | # of Lines: {}".format(k, len(segment_lines)))
+            print(segment_lines)
+            print('')
             # # Label points using extracted line segments 
             for p in segments[k]:
                 radial_dist = self.calculateDistance(p, (0,0))
-        
                 if(self.isGroundPoint(radial_dist, p[2], segment_lines, ground_distance_threshold)):
-                    self.ground_plane += [[p[0], p[1], p[2]+0.05]]
+                    self.ground_plane += [[p[0], p[1], p[2]]]
                 else:
-                    self.obstacle_plane += [[p[0], p[1], p[2]+0.05]]
+                    self.obstacle_plane += [[p[0], p[1], p[2]]]
         return
     
     
@@ -435,7 +466,9 @@ class PointCloudGen:
             
             obstacles += [[[center[0], center[1]], radius]]
 
-        return obstacles        
+        return obstacles   
+    
+         
     
     def plot_ground_plane(self):
         fig = pyplot.figure()
@@ -479,6 +512,7 @@ class PointCloudGen:
         ax.scatter(x, y, z, s=10, c='r', marker="d")        
         pyplot.show()
         
+
 
     def plot_gradient_grid(self):
         '''
@@ -532,6 +566,18 @@ class PointCloudGen:
                 
         return
 
+def writeCloudToFile(fileName, points):
+    with open(fileName + '.pts', 'wb') as filehandle:
+        pickle.dump(points, filehandle)
+
+def readCloudFromFile(fileName):
+    points = []
+    
+    with open(fileName + '.pts', 'rb') as filehandle:
+        points = pickle.load(filehandle)
+            
+    return points
+            
 
 # Unit tests
 def test_occupancy_grid():
@@ -555,7 +601,7 @@ def test_ptcloud():
 
 def test_ground_plane_extraction():
     size = [(0, 2), (0, 2), (0, 2)]
-    cld = PointCloudGen(size, 1, num_points=3000)
+    cld = PointCloudGen(size, 1, num_points=2000)
     cld.gaussian_cloud()
     cld.groundPlaneComputation()
     cld.plot_ground_plane()
@@ -566,7 +612,68 @@ def test_obstacle_extraction():
     cld.gaussian_cloud()
     cld.groundPlaneComputation()
     cld.plot_obstacles()
+    
+def test_2d_line_extraction():
+    radial_range = [0,10]
+    n_bins = 20
+    
+    bin_size = (radial_range[1] - radial_range[0])/n_bins
+    
+    # Generate a cross-section of
+    size = [(0, 2), (0, 2), (0, 2)]
+    cld = PointCloudGen(size, 1, num_points=1000)
+    points = cld.generate2DGaussianCloud(n_points=1000, n_features=4)
+    
+    # Read from file
+    # points = readCloudFromFile('origin')
+    
+    x = points[:,0]
+    z = points[:,1]    
+    
+    bins = [[] for i in range(n_bins)]
 
+    for p in points:
+        bin_i = int(p[0] / bin_size)
+        if(bin_i > n_bins-1):
+            pass
+        bins[bin_i] += [p] # Store point in bin as (radial_dist, z-val) 
+
+    # Extract lines from segment
+    segment_lines = cld.extractSegmentLines(bins, [-0.01,0.01], 1, 0.01, 1)
+    
+    # Label points using extracted line segments and draw
+    cld.obstacle_plane = []
+    cld.ground_plane = []
+    for p in points:
+        if(cld.isGroundPoint(p[0], p[1], segment_lines, 0.01)):
+            cld.ground_plane += [p]
+        else:
+            cld.obstacle_plane += [p]
+            
+    pyplot.scatter(x, z, s=10, c='g', marker="d")   
+         
+    # Draw line segments
+    for s in segment_lines:
+        point1 = s[2]
+        point2 = s[3]
+        x_values = [point1[0], point2[0]]
+        y_values = [point1[1], point2[1]]
+        pyplot.plot(x_values, y_values)
+        
+    # Draw obstacle plane
+    o_plane = np.array(cld.obstacle_plane)
+    ox = o_plane[:,0]
+    oz = o_plane[:,1]
+    pyplot.scatter(ox, oz, s=10, c='r', marker="d")   
+             
+    # Draw bins
+    bin_points = []
+    for i,b in enumerate(bins):
+        bin_points += [cld.getPrototypePoint(np.array(b))]
+    bin_points = np.array(bin_points)
+    pyplot.scatter(bin_points[:,0], bin_points[:,1], s=10, c='b', marker="d")   
+    
+    pyplot.show()
 
 def test_numpy_constructor():
     arr = np.random.rand(100, 3)
@@ -575,8 +682,8 @@ def test_numpy_constructor():
     
 
 if __name__ == '__main__':
-    # test_ground_plane_extraction
-    test_obstacle_extraction()
+    test_2d_line_extraction()
+    # test_obstacle_extraction()
     # test_occupancy_grid()
     # # test_ptcloud()
     # # test_numpy_constructor()
