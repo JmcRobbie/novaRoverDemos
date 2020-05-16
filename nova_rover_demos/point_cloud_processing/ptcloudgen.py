@@ -314,6 +314,7 @@ class PointCloudGen:
         points_to_fit = []
         
         for i,v in enumerate(bins):
+            # print("Bin #{} of {}".format(i, len(bins)) )
             bin_points = np.array(v)
             
             if bin_points is not None and len(bin_points) > 0:
@@ -322,7 +323,6 @@ class PointCloudGen:
                         
                     (m, b) = self.fitLine(np.array(points_to_fit_with_prototype))
 
-                    # print("Bin #", i)
                     # print("Points to Fit: ", points_to_fit_with_prototype)
                     # print("LineFit: ", (m,b))     
                     # print("RMSE: ", self.fitError(m,b, np.array(points_to_fit_with_prototype)))               
@@ -331,14 +331,14 @@ class PointCloudGen:
                     if(abs(m) <= slope_range[1] and (abs(m) > slope_range[1] or abs(b) <= plateu_threshold) \
                          and self.fitError(m,b, np.array(points_to_fit_with_prototype)) <= rmse_threshold):       
                         points_to_fit = points_to_fit_with_prototype
-                        
                         if(i==len(bins)-1):
                             # If last element and fits, make a line segment
+                            # print("Last element")
                             
                             x0 = min(np.array(points_to_fit)[:,0])
                             x1 = max(np.array(points_to_fit)[:,0])
                             line_segments += [(m,b,(x0,m*x0+b), (x1, m*x1+b))]
-       
+                            
                     else:
                         (m, b) = self.fitLine(np.array(points_to_fit))
                         
@@ -358,8 +358,8 @@ class PointCloudGen:
                             
         return np.array(line_segments)     
             
-    def groundPlaneComputation(self, n_seg = 20, n_bins = 20, radial_range = [0,5], slope_range = [-1, 1], 
-                               plateu_threshold = 1, rmse_threshold = 1, line_endpoint_threshold = 1, ground_distance_threshold = 0.06):
+    def groundPlaneComputation(self, n_seg = 40, n_bins = 30, radial_range = [0,5], slope_range = [-0.1, 0.1], 
+                               plateu_threshold = 1, rmse_threshold = 0.01, line_endpoint_threshold = 0.1, ground_distance_threshold = 0.006):
         '''
         Calculates self.ground_plane, returning a boolean filled occupancy grid.\\
         Implementation of paper: https://ieeexplore.ieee.org/document/5548059 \\
@@ -384,41 +384,41 @@ class PointCloudGen:
 
         self.ground_plane = []
         self.obstacle_plane = []
+        self.line_segments = []
         
-
         # Group points by segment
-        segments = {}
+        segments = [[] for i in range(n_seg)]
         for i in range(self.num_points):
             segment_i = self.calculateSegment(self.ptcloud[i][0], self.ptcloud[i][1], seg_size)
-            if(segments.get(segment_i) is None):
-                segments[segment_i] = []
             segments[segment_i] += [self.ptcloud[i]]
-        
-        # Group points by bin
-        bins = {} # first index is segment, second index is bin
-        for i,k in enumerate(segments):
-            if bins.get(k) is None:
-                bins[k] = {}
-            for p in segments[k]:
-                radial_dist = self.calculateDistance(p, (0,0))
+
+        # Group points by bin where first index is segment, second is bin for given segment
+        bins = [[[] for i in range(n_bins)] for j in range(n_seg)]
+        for i,segment in enumerate(segments):
+            
+            for point in segment:
+                radial_dist = self.calculateDistance(point, (0,0))
                 bin_i = int(radial_dist / bin_size)
-                if(bins[k].get(bin_i) is None):
-                    bins[k][bin_i] = []
-                bins[k][bin_i] += [[radial_dist, p[2]]] # Store point in bin as (radial_dist, z-val)
+                
+                # Ignore points out of range
+                if(bin_i > n_bins-1):
+                    pass
+                else:
+                    bins[i][bin_i] += [[radial_dist, point[2]]] # Store point in bin as (radial_dist, z-val)
         
             # Extract lines from segment
-            segment_lines = self.extractSegmentLines(bins[k], slope_range, plateu_threshold, rmse_threshold, line_endpoint_threshold)
-            
-            print("Segment: {} | # of Lines: {}".format(k, len(segment_lines)))
-            print(segment_lines)
-            print('')
-            # # Label points using extracted line segments 
-            for p in segments[k]:
-                radial_dist = self.calculateDistance(p, (0,0))
-                if(self.isGroundPoint(radial_dist, p[2], segment_lines, ground_distance_threshold)):
-                    self.ground_plane += [[p[0], p[1], p[2]]]
+            print("Segment #", i)
+            segment_lines = self.extractSegmentLines(bins[i], slope_range, plateu_threshold, rmse_threshold, line_endpoint_threshold)
+            print("Lines: {}".format(len(segment_lines)))
+            print("Lines: {}".format(segment_lines))
+            # Label points using extracted line segments 
+            for point in segment:
+                radial_dist = self.calculateDistance(point, (0,0))
+                if(self.isGroundPoint(radial_dist, point[2], segment_lines, ground_distance_threshold)):
+                    self.ground_plane += [[point[0], point[1], point[2]]]
                 else:
-                    self.obstacle_plane += [[p[0], p[1], p[2]]]
+                    self.obstacle_plane += [[point[0], point[1], point[2]]]
+                    
         return
     
     
@@ -477,15 +477,19 @@ class PointCloudGen:
         y = self.ptcloud[:, 1]
         z = self.ptcloud[:, 2]
         
-        g_plane = np.array(self.ground_plane)
-    
-        gx = g_plane[:,0]
-        gy = g_plane[:,1]
-        gz = g_plane[:,2]
-        
         ax.scatter(x, y, z, s=10, c='r', marker="d")
-        ax.scatter(gx, gy, gz , s=10, c='b', marker="s")
         
+        if len(self.ground_plane) > 0:
+            g_plane = np.array(self.ground_plane)
+        
+            gx = g_plane[:,0]
+            gy = g_plane[:,1]
+            gz = g_plane[:,2]
+            
+            ax.scatter(gx, gy, gz , s=10, c='b', marker="s")
+        else:
+            print('Ground plane empty')
+
         pyplot.show()
         
     def plot_obstacles(self):
@@ -512,8 +516,6 @@ class PointCloudGen:
         ax.scatter(x, y, z, s=10, c='r', marker="d")        
         pyplot.show()
         
-
-
     def plot_gradient_grid(self):
         '''
         Plots a heat map of the gradient map
@@ -566,6 +568,7 @@ class PointCloudGen:
                 
         return
 
+# Utils
 def writeCloudToFile(fileName, points):
     with open(fileName + '.pts', 'wb') as filehandle:
         pickle.dump(points, filehandle)
@@ -576,8 +579,7 @@ def readCloudFromFile(fileName):
     with open(fileName + '.pts', 'rb') as filehandle:
         points = pickle.load(filehandle)
             
-    return points
-            
+    return points    
 
 # Unit tests
 def test_occupancy_grid():
@@ -601,14 +603,19 @@ def test_ptcloud():
 
 def test_ground_plane_extraction():
     size = [(0, 2), (0, 2), (0, 2)]
-    cld = PointCloudGen(size, 1, num_points=2000)
+    cld = PointCloudGen(size, 3, num_points=2000)
+    
     cld.gaussian_cloud()
+    writeCloudToFile('gauss_cld', cld.ptcloud)
+    
+    # cld.ptcloud = readCloudFromFile('gauss_cld')
+    
     cld.groundPlaneComputation()
     cld.plot_ground_plane()
     
 def test_obstacle_extraction():
     size = [(0, 2), (0, 2), (0, 2)]
-    cld = PointCloudGen(size, 2, num_points=1000)
+    cld = PointCloudGen(size, 2, num_points=500)
     cld.gaussian_cloud()
     cld.groundPlaneComputation()
     cld.plot_obstacles()
@@ -682,8 +689,8 @@ def test_numpy_constructor():
     
 
 if __name__ == '__main__':
-    test_2d_line_extraction()
-    # test_obstacle_extraction()
+    # test_2d_line_extraction()
+    test_ground_plane_extraction()
     # test_occupancy_grid()
     # # test_ptcloud()
     # # test_numpy_constructor()
