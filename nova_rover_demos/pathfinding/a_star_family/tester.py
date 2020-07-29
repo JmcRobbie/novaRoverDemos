@@ -1,3 +1,7 @@
+''' 
+This file is provided for additional testing of the different algorithms
+'''
+
 import time 
 
 # Importing a-star and family  
@@ -9,25 +13,18 @@ from src.other_algorithms import *
 from maze.diagrams import *
 from maze.grid import draw_grid
 
-grid = diagram3
+# Trying a open grid system 
+grid1 = diagram5
 
-# #Testing a-star 
+# Defining start and goal  
 start, goal = (1, 4), (38, 28)
-# Calculating the cost and node origins 
-print('-------------------- Regular A* -----------------------\n')
-path = a_star_search(grid, start, goal)
-draw_grid(grid, width=3, path=path)
-print('\n')
+# Get the desired path 
+path = a_star_search(grid1, start, goal)
+# Print the length of path 
+print(len(path))
 
-
-# Testing variants  
-print('-------------------- Bidirectional A* -----------------------\n')
-path = bidirectional_a_star(grid, start, goal)
-draw_grid(grid, width=3, path=path)
-print('\n')
-
-
-print('-------------------- Weighted A* -----------------------\n')
-path = weighted_a_star(grid, start, goal)
-draw_grid(grid, width=3, path=path)
-print('\n')
+# Trying a dimension specific map 
+grid2 = diagram3
+path = weighted_a_star(grid2, start, goal)
+# Print the length of path 
+print(len(path))

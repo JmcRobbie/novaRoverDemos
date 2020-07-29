@@ -83,39 +83,90 @@ Manhattan Distance | h(n) = abs((x<sub>goal</sub> - x)) + abs((y<sub>goal</sub> 
 Diagonal Distance | h(n) = max(abs((x<sub>goal</sub> - x)), abs((y<sub>goal</sub> - y)))
 
  
+# Metrics 
+
+#### Map: OpenGrid - Real space without dimensions
+
+Algorithm | # times run | Median (ms) | Mean (ms) | Std. Deviation |   Avg. Path Length 
+----------|-------------|-------------|-----------|----------------|---------------------------
+Base A*   | 3025        | 23.943662643432617 | 26.743000282728968 | 7.554963703072549 | 62.0
+Bidirectional A* | 2960 | 17.917275428771973| 19.237902518865223 | 5.354171559235531 | 62.0
+Weighted A*| 2910 | 0.9999275207519531 | 1.4432568730357587 | 0.6828766958337971 | 64.0
+Dynamic Weighted A* | 3105 | 8.986949920654297 | 10.285768339983315 | 2.789930903729083 | 64.0
+
+Note: 
+- These metrics are meant to give us relative understanding rather than absolute performance 
+- The heuristic used for all algorithms is Manhattan Distance 
+
+
+#### Map: Randomly Weighted Grids of Size 40 by 40
+
+Algorithm | # times run | Median (ms) | Mean (ms) | Std. Deviation |   Avg. Path Length 
+----------|-------------|-------------|-----------|----------------|---------------------------
+Base A*   | 3016        | 22.937893867492676 | 24.728299056819644 | 5.560186372625823 | 62.0
+Bidirectional A* | 3001 | 15.959024429321289| 17.706753054844146 | 4.262223894687466 | 62.0
+Weighted A*| 3027 | 0.9982585906982422 | 1.320655486904279 | 0.5098137747095521 | 64.0
+Dynamic Weighted A* | 2956 | 3.988981246948242 | 3.995342248186207 | 1.0668236012002967 | 64.0
+
+### Key Insights 
+1. Weighted A* is generally much faster than other algorithms but its high bias is a risk and can fail in certain situations. 
+2. Dynamic Weighted A* although relatively slower than static weighted in the long run the path length can be more optimal. 
+3. Both statically and dynamic weighted A* is faster but the path is not optimal. 
+4. Bidirectional generally produces an optimal path but the time consumption is high. 
+5. Base A-Star is slower but the path generated is the most optimal 
+
+To run benchmarking yourself, run the following commands 
+
+To see the output of base-a-star and different variants together, simply run. It makes 1-2 mins to run the script due to the high volume of tests.  
+
+```python3 
+python benchmark.py
+```
 
 # Running instructions 
 
-To see the output of different functions simply run 
+To see the output of base-a-star and different variants together, simply run 
 
 ```python3 
-python tester.py
+python run.py
 ```
 
+An additional file has been added if you want to individually alter, test or run any of algorithms
+
+```python3
+python tester.py
+```
 
 Here are some sample outputs of different algorithms run on the same diagram: 
 
 ![Regular A*](img/regular-output.png)
 
-![Bidirection A*](img/bidirectional-output.png)
+![Bidirectional A*](img/bidirectional-output.png)
 
 ![Weighted A*](img/weighted-output.png)
 
 
-### Different Diagrams 
-There are 4 different diagram choices available named diagram1 .... digram4 
+## Different Diagrams 
+There are 5 different diagram choices available named diagram1 .... digram5 for testing purposes.You can add maps of your own according to the specifications. To know more about the maps used check the README file inside the 'maze' folder. 
+
 You can select the diagram of your choice 
 
-```
+```python
 grid = diagram[You choice of diagram no.]
 ```
 
 You should also make sure the start and goal coordinates are valid as different dimensions. The diagrams can be found in '/maze/diagrams.py'
 
-``` 
+```python
 start, goal = (x, y), (u, v)
 ```
 The diagrams also vary on the weight of each cell as well as wall configuration. 
 
 
 **Note**: Any kind contribution is welcome. Please feel free to open a pull request and I will review it as soon as possible.  
+
+
+# Attributions 
+
+- GIFs used for Weighted and Dynamic A* are taken from Wikipedia 
+- Initial SqaureGrid Maze code is taken from [Introduction to A* by Amit](http://theory.stanford.edu/~amitp/GameProgramming/AStarComparison.html#:~:text=A*%20is%20the%20most%20popular,a%20heuristic%20to%20guide%20itself.)
