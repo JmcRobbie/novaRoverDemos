@@ -51,6 +51,41 @@ class WeightedGrid(SquareGrid):
 
 
 
+""" 
+A class to represent an open grid which does not have any fixed dimensions. 
+We can assume got these kind of grids we will only be given information about 
+the obstacles and nothing else. 
+
+This is the class that would be used with Rover as the FastSlam algorithm only
+provides us with a list of coordinates of the obstacles 
+""" 
+class OpenGrid:
+    def __init__(self):
+        self.walls = []
+        self.weights = {}
+
+    # Check if current location is blocked for not 
+    def passable(self, id):
+        return id not in self.walls
+
+    # Check the neighbors of the current grid 
+    def neighbors(self, id): 
+        (x, y) = id
+        result = [(x+1, y), (x, y-1), (x-1, y), (x, y+1)]
+        # Just for aesthetics 
+        if(x + y) % 2 == 0: 
+            result.reverse()
+        # Check if the neighbors are not blocked 
+        result = filter(self.passable, result)
+
+        return result
+
+    # Method to get cost to travel from weights, else default value of 1 
+    def cost(self, from_node, to_node):
+        return self.weights.get(to_node, 1)
+
+
+
 ########################################### Implementation of diagrams ####################################### 
 
 # A 50 by 50 grid with equal grid values 
@@ -100,3 +135,14 @@ diagram4.weights = {loc: 5 for loc in [(3, 4), (3, 5), (4, 1), (4, 2),
                                        (6, 4), (6, 5), (6, 6), (6, 7), 
                                        (7, 3), (7, 4), (7, 5)]}
 
+
+# Implementation of the open-grid 
+
+diagram5 = OpenGrid() 
+walls = []
+for wall in range (65): 
+    x = random.randint(3, 35) 
+    y = random.randint(0, 30)
+    walls.append((x, y))
+
+diagram5.walls = walls 
