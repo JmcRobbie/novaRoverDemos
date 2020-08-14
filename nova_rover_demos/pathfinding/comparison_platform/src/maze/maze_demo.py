@@ -3,8 +3,8 @@ import numpy as np
 
 from random_maze import *
 
-xdim = 1000
-ydim = 1000
+xdim = 200
+ydim = 200
 
 density = ['sparse', 'light', 'medium', 'heavy']
 

@@ -18,7 +18,6 @@ Functions should be of the form * My_Function(occupancy_grid, start_position, en
 
 '''
 
-iterations = 3
 algorithm_list = [modified_pledge, a_star]
 density = 'light' #Density keyword describes the density of the environment to be traversed. Can be 'heavy', 'medium', 'light' or 'sparse'
 
@@ -32,8 +31,5 @@ Below this point no input is required from the user :)
 
 warnings.simplefilter("ignore")
 
-a = compare_algorithms(algorithm_list, iterations, density)
+compare_algorithms(algorithm_list, density)
 
-
-for i in a:
-    print(i)
