@@ -13,7 +13,7 @@ Syntax: random_maze(x_dimension, y_dimension, density)
 
 def compare_algorithms(algorithm_list, density):
     
-    maze_x_dimension, maze_y_dimension = 10, 10
+    maze_x_dimension, maze_y_dimension = 150, 150
 
     # Generate the arguments to the benchmarking function
     # args output > occupancy_grid, start_coordinates, end_coordinates

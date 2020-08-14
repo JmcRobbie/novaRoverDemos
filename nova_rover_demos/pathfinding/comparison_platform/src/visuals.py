@@ -29,6 +29,7 @@ def visualiser(time_stats, memory_stats):
     # Read labels top to bottom 
     ax1.invert_yaxis()
     # Labels 
+    ax1.set_xscale('log')
     ax1.set_xlabel('Mean Runtime (ms)')
     ax1.set_title('Runtime Comparison')
     
