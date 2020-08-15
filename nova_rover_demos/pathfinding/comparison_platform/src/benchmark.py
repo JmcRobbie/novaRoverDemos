@@ -20,7 +20,8 @@ def benchmarker(functions, args):
     times = {f.__name__: [] for f in functions}
     # Dictionary to hold memory 
     peak_memory = {f.__name__: 0 for f in functions}
-
+    # A dictionary to keep track of total path lenth 
+    avg_path = {f.__name__: 0 for f in functions}
     # Loading the arguments to proper functions 
     '''
     args = [ [...], [....], [...]  ]
@@ -40,7 +41,7 @@ def benchmarker(functions, args):
             tracemalloc.start()
             # Run the functions with the arguments 
             #func(*func_args)
-            func(*args)
+            path, status = func(*args)
             # Stop memory tracing 
             peak = tracemalloc.get_traced_memory()[1]
             tracemalloc.stop()
@@ -49,6 +50,7 @@ def benchmarker(functions, args):
             times[func.__name__].append((t1-t0)*1000)
             peak_memory[func.__name__] = peak \
                 if peak > peak_memory[func.__name__] else peak_memory[func.__name__]
+            
+            avg_path[func.__name__] = len(path) + avg_path[func.__name__]
 
-
-    return times, peak_memory
+    return times, peak_memory, avg_path
