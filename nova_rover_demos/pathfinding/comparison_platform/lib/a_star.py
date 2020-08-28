@@ -123,6 +123,7 @@ def a_star_search(graph, start, goal):
     return reconstruct_path(came_from, start, goal)
 
 
+# A wrapper function around the main star search function
 def a_star(oc_grid, start, end):
     diagram = OpenGrid()
     diagram.add_walls(oc_grid)
@@ -136,6 +137,7 @@ def a_star(oc_grid, start, end):
     return path, maze_solved
 
 
+# A class which handles the grid world for A-star
 class OpenGrid:
     def __init__(self):
         self.walls = defaultdict(int)

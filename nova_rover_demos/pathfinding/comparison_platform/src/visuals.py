@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
+# The function responsible for displaying the plots in the screen
 def visualiser(time_stats, memory_stats, path_stats):
 
     # Converting to appropriate data
@@ -71,13 +72,17 @@ def visualiser(time_stats, memory_stats, path_stats):
     plt.show()
 
 
+# A function to draw the grid with path found by each of the algorithms
 def plot_diagram(functions, args, maze_x, maze_y):
 
+    # Loop through all the algorithms
     for func in functions:
         path, status = func(*args)
 
+        # Creating an identify matrix of given dimensions
         grid = np.ones([maze_x, maze_y])
 
+        # Populate different kinds of grids
         for i in args[0]:
             grid[i] = 0
 
@@ -87,6 +92,7 @@ def plot_diagram(functions, args, maze_x, maze_y):
         grid[path[0]] = 3
         grid[path[-1]] = 4
 
+        # Create a figure and save it
         plt.imshow(grid.T)
         plt.colorbar()
         filename = "results/" + func.__name__ + ".pdf"

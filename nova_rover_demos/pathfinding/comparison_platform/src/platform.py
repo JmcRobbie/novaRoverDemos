@@ -5,9 +5,19 @@ import numpy as np
 from src.maze.random_maze import *
 from src.benchmark import *
 from src.visuals import *
+
 '''
 Syntax: random_maze(x_dimension, y_dimension, density)
     > Density can be 'heavy', 'medium', 'light', or 'sparse'
+'''
+
+'''
+    The core function which combines different components.
+    It serves as a platform for the data to be passed around between different 
+    sub-modules. 
+
+    @param algorithm_list - List of algorithms it needs to compare 
+    @param density - The density of obstacles in the environment 
 '''
 
 

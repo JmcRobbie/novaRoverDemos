@@ -58,6 +58,15 @@ def benchmarker(functions, args):
     return times, peak_memory, avg_path
 
 
+'''
+    A function which outputs the benchmark statistics into a CSV file  
+
+    @param time_stats - Time related statistics 
+    @param memory_stats - Memory usage 
+    @param path_stats - Contains path lengths 
+'''
+
+
 def print_results(time_stats, memory_stats, path_stats):
 
     with open('results/benchmark.csv', mode='w') as csv_file:
