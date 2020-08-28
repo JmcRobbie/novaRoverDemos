@@ -22,5 +22,7 @@ def compare_algorithms(algorithm_list, density):
     # Run the benchmarking on the selected arguments
     time_stats, memory_stats, path_stats = benchmarker(algorithm_list, args)
 
+    # Save  the results in the results folder
+    plot_diagram(algorithm_list, args, maze_x_dimension, maze_y_dimension)
     # Draw visuals based on our benchmarking
     visualiser(time_stats, memory_stats, path_stats)

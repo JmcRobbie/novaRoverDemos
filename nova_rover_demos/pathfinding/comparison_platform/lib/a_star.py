@@ -143,7 +143,7 @@ class OpenGrid:
 
     # Check if current location is blocked for not
     def passable(self, id):
-        return True if self.walls[id] == 1 else False
+        return False if self.walls[id] == 1 else True
 
     # Check the neighbors of the current grid
     def neighbors(self, id):

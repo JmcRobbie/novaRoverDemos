@@ -19,10 +19,10 @@ Functions should be of the form * My_Function(occupancy_grid, start_position, en
 
 '''
 
-algorithm_list = [modified_pledge, a_star, bidirectional_a_star, weighted_a_star]
-#algorithm_list = [modified_pledge, bidirectional_a_star]
-density = 'light' #Density keyword describes the density of the environment to be traversed. Can be 'heavy', 'medium', 'light' or 'sparse'
+algorithm_list = [a_star, modified_pledge,
+                  bidirectional_a_star, weighted_a_star]
 
+density = 'light'  # Density keyword describes the density of the environment to be traversed. Can be 'heavy', 'medium', 'light' or 'sparse'
 
 
 ######################################################################
@@ -34,4 +34,3 @@ Below this point no input is required from the user :)
 warnings.simplefilter("ignore")
 
 compare_algorithms(algorithm_list, density)
-
