@@ -1,5 +1,5 @@
 from lib.a_star import *
-
+from collections import defaultdict
 
 def bidirectional_a_star(oc_grid, start, end):
     diagram =  OpenGrid()
@@ -276,3 +276,32 @@ class OpenGrid:
         return self.weights.get(to_node, 1)
 
 
+# class OpenGrid:
+#     def __init__(self):
+#         self.walls = defaultdict(int)
+#         self.weights = {}
+
+#     # Check if current location is blocked for not
+#     def passable(self, id):
+#         return self.walls[id] == 1;
+
+#     # Check the neighbors of the current grid
+#     def neighbors(self, id):
+#         (x, y) = id
+#         result = [(x+1, y), (x, y-1), (x-1, y), (x, y+1)]
+#         # Just for aesthetics
+#         if(x + y) % 2 == 0:
+#             result.reverse()
+#         # Check if the neighbors are not blocked
+#         result = filter(self.passable, result)
+
+#         return result
+
+#     # Method to get cost to travel from weights, else default value of 1
+#     def cost(self, from_node, to_node):
+#         return self.weights.get(to_node, 1)
+
+#     # A function to load the walls into the grid 
+#     def add_walls(self, wall_list):
+#         for cell in wall_list:
+#             self.walls[cell] = 1;
