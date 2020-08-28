@@ -153,7 +153,7 @@ class OpenGrid:
         if(x + y) % 2 == 0:
             result.reverse()
         # Check if the neighbors are not blocked
-        result = filter(self.passable, result)
+        result = list(filter(self.passable, result))
 
         return result
 

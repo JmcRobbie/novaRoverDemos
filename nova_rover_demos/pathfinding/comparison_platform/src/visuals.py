@@ -77,7 +77,6 @@ def plot_diagram(functions, args, maze_x, maze_y):
         path, status = func(*args)
 
         grid = np.ones([maze_x, maze_y])
-        # plt.colorbar()
 
         for i in args[0]:
             grid[i] = 0
@@ -89,6 +88,7 @@ def plot_diagram(functions, args, maze_x, maze_y):
         grid[path[-1]] = 4
 
         plt.imshow(grid.T)
-
-        filename = func.__name__ + ".pdf"
+        plt.colorbar()
+        filename = "results/" + func.__name__ + ".pdf"
         plt.savefig(filename)
+        plt.close()
