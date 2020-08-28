@@ -6,8 +6,11 @@ import time
 import random
 import math
 import heapq
+from collections import defaultdict
 
 # Wrapper class with added functionalities
+
+
 class PriorityQueue:
     def __init__(self):
         self.elements = []
@@ -39,6 +42,8 @@ def reconstruct_path(came_from, start, goal):
     return path
 
 # Combine two paths and avoid happing overlapping nodes
+
+
 def join_paths(path_1, path_2):
     path_2.reverse()
     if(path_1[-1] == path_2[0]):
@@ -54,6 +59,8 @@ def manhattan_heuristic(a, b):
     return abs(x1 - x2) + abs(y1 - y2)
 
 # Diagonal heuristic which considers the diagonal value of nodes
+
+
 def diagonal_heuristic(a, b):
     (x1, y1) = a
     (x2, y2) = b
@@ -61,6 +68,8 @@ def diagonal_heuristic(a, b):
     return max(abs(x1 - x2), abs(y1 - y2))
 
 # Taking the euclidian distance as heuristics
+
+
 def euclidian_heuristic(a, b):
     (x1, y1) = a
     (x2, y2) = b
@@ -68,6 +77,8 @@ def euclidian_heuristic(a, b):
     return math.sqrt((x1 - x2)**2 + (y1 - y2)**2)
 
 # Implementation of the a-star search algorithm
+
+
 def a_star_search(graph, start, goal):
     # Priority Queue track progression of nodes
     frontier = PriorityQueue()
@@ -107,20 +118,32 @@ def a_star_search(graph, start, goal):
                 frontier.put(next, priority)
                 came_from[next] = current
 
-
     # Return the cost and source dictionary
-    #return came_from, cost_so_far
+    # return came_from, cost_so_far
     return reconstruct_path(came_from, start, goal)
+
+
+def a_star(oc_grid, start, end):
+    diagram = OpenGrid()
+    diagram.add_walls(oc_grid)
+    try:
+        path = a_star_search(diagram, start, end)
+        maze_solved = True
+    except:
+        path = start
+        maze_solved = False
+
+    return path, maze_solved
 
 
 class OpenGrid:
     def __init__(self):
-        self.walls = []
+        self.walls = defaultdict(int)
         self.weights = {}
 
     # Check if current location is blocked for not
     def passable(self, id):
-        return id not in self.walls
+        return True if self.walls[id] == 1 else False
 
     # Check the neighbors of the current grid
     def neighbors(self, id):
@@ -138,14 +161,7 @@ class OpenGrid:
     def cost(self, from_node, to_node):
         return self.weights.get(to_node, 1)
 
-def a_star(oc_grid, start, end):
-    diagram =  OpenGrid()
-    diagram.walls = oc_grid
-    try:
-        path = a_star_search(diagram, start, end)
-        maze_solved = True
-    except:
-        path = start
-        maze_solved = False
-
-    return path, maze_solved
+    # Helper method to add walls to the dictionary
+    def add_walls(self, walls):
+        for wall in walls:
+            self.walls[wall] = 1
