@@ -24,5 +24,9 @@ def compare_algorithms(algorithm_list, density):
 
     # Save  the results in the results folder
     plot_diagram(algorithm_list, args, maze_x_dimension, maze_y_dimension)
+
+    # Print the results in a log file
+    print_results(time_stats, memory_stats, path_stats)
+
     # Draw visuals based on our benchmarking
     visualiser(time_stats, memory_stats, path_stats)

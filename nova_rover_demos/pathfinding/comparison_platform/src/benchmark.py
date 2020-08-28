@@ -5,7 +5,7 @@ import random
 import statistics
 import tracemalloc
 import sys
-
+import csv
 '''
     The core function which handles the benchmarking of different algorithms 
 
@@ -56,3 +56,18 @@ def benchmarker(functions, args):
             avg_path[func.__name__] = len(path) + avg_path[func.__name__]
 
     return times, peak_memory, avg_path
+
+
+def print_results(time_stats, memory_stats, path_stats):
+
+    with open('results/benchmark.csv', mode='w') as csv_file:
+        field_names = ['Algorithm', 'Mean Runtime',
+                       'Std Deviation', 'Peak Memory Usage', 'Avg. Path']
+        writer = csv.DictWriter(csv_file, fieldnames=field_names)
+
+        writer.writeheader()
+        for name, number in time_stats.items():
+            writer.writerow({'Algorithm': name, 'Mean Runtime': statistics.mean(number),
+                             'Std Deviation': statistics.stdev(number), 'Peak Memory Usage': memory_stats[name],
+                             'Avg. Path': (path_stats[name] / len(number))
+                             })
