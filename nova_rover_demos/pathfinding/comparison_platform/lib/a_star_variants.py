@@ -1,6 +1,8 @@
 from lib.a_star import *
 from collections import defaultdict
 
+# Wrapper function
+
 
 def bidirectional_a_star(oc_grid, start, end):
     diagram = OpenGrid()
@@ -14,6 +16,8 @@ def bidirectional_a_star(oc_grid, start, end):
 
     return path, maze_solved
 
+# Wrapper function
+
 
 def weighted_a_star(oc_grid, start, end):
     diagram = OpenGrid()
@@ -26,6 +30,8 @@ def weighted_a_star(oc_grid, start, end):
         maze_solved = False
 
     return path, maze_solved
+
+# Wrapper function
 
 
 def dynamic_weighted_a_star(oc_grid, start, end):
