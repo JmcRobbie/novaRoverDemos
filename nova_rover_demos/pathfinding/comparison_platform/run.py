@@ -4,11 +4,12 @@ import warnings
 Place Algorithm Imports Here
 '''
 
+############## IMPORT YOUR ALGORITHM HERE ##############################
 from lib.modified_pledge import *
 from lib.a_star import *
 from lib.a_star_variants import *
 
-
+#########################################################################
 '''
 Place the function call for each algorithm to be compared into the list named 'algorithm list'.
 

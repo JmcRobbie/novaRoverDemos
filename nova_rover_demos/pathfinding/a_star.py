@@ -1,3 +1,7 @@
+import numpy as np
+from itertools import product
+from math import sqrt, inf
+from pathfinding.heuristic import euclidean_cost
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/../")
@@ -6,10 +10,6 @@ try:
 except:
     raise
 
-from pathfinding.heuristic import euclidean_cost
-from math import sqrt, inf
-from itertools import product
-import numpy as np
 
 def reconstruct_path_to_destination(prev, end):
     """
@@ -25,6 +25,8 @@ def reconstruct_path_to_destination(prev, end):
     return path
 
 # A* Search
+
+
 def get_successors(node, grid):
     """
     The neighbors of a cell (node) in the grid are the 8-surrounding cells.
@@ -35,7 +37,7 @@ def get_successors(node, grid):
     n_rows = len(grid)
     n_cols = len(grid[0])
 
-    for dx, dy in product([-1,0,1],[-1,0,1]):
+    for dx, dy in product([-1, 0, 1], [-1, 0, 1]):
         # skip the current node itself
         if (dx == 0 and dy == 0):
             continue
@@ -49,16 +51,19 @@ def get_successors(node, grid):
             # put infinite penalty on successors that would take us off the edge of the grid
             cost = inf
 
-        successors.append( ((x, y), cost) )
+        successors.append(((x, y), cost))
 
     return successors
 
-def node_with_min_fscore(open_set, f_cost): # open_set is a set (of cell) and f_cost is a dict (with cells as keys)
+
+# open_set is a set (of cell) and f_cost is a dict (with cells as keys)
+def node_with_min_fscore(open_set, f_cost):
     """
     Find the cell in open set with the smallest f score.
     """
     f_cost_open = dict([a for a in f_cost.items() if a[0] in open_set])
     return min(f_cost_open, key=f_cost_open.get)
+
 
 def a_star_search(grid, start, end, heuristic_cost=euclidean_cost):
     """
@@ -108,7 +113,7 @@ def a_star_search(grid, start, end, heuristic_cost=euclidean_cost):
             if neighbor in closed_set:
                 continue
 
-            curr_g_score =  g_cost[curr] + cost
+            curr_g_score = g_cost[curr] + cost
             # add neighbor to newly discovered nodes
             if neighbor not in open_set:
                 open_set.add(neighbor)

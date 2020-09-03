@@ -5,16 +5,21 @@ from collections import defaultdict
 
 
 def bidirectional_a_star(oc_grid, start, end):
+    # Instantiate appropriate attributes if necessary
     diagram = OpenGrid()
     diagram.add_walls(oc_grid)
     try:
+        # Call the main algorithm
         path = bidirectional_a_star_core(diagram, start, end)
         maze_solved = True
     except:
         path = start
         maze_solved = False
 
+    # Return a list of tuples as path and
+    # a boolean indicating maze solved or not
     return path, maze_solved
+
 
 # Wrapper function
 
