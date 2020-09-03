@@ -4,7 +4,7 @@ import warnings
 Place Algorithm Imports Here
 '''
 
-############## IMPORT YOUR ALGORITHM HERE ##############################
+############## IMPORT YOUR ALGORITHM(S) HERE ###########################
 from lib.modified_pledge import *
 from lib.a_star import *
 from lib.a_star_variants import *
@@ -20,10 +20,17 @@ Functions should be of the form * My_Function(occupancy_grid, start_position, en
 
 '''
 
+################## List the algorithms you want to compare here ##############################
 algorithm_list = [modified_pledge, a_star,
                   bidirectional_a_star, weighted_a_star]
 
-density = 'light'  # Density keyword describes the density of the environment to be traversed. Can be 'heavy', 'medium', 'light' or 'sparse'
+
+##############################################################################################
+
+
+# Density keyword describes the density of the environment to be traversed.
+# Can be 'heavy', 'medium', 'light' or 'sparse'
+density = 'light'
 
 
 ######################################################################
