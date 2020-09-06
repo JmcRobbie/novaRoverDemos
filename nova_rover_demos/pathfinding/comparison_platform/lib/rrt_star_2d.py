@@ -1,9 +1,9 @@
 
 import numpy as np
 
-from src.rrt.rrt_star import RRTStar
-from src.search_space.search_space import SearchSpace
-from src.utilities.plotting import Plot
+from pathfinding.rrtStarCombo.rrt.rrt_star import RRTStar
+from pathfinding.rrtStarCombo.usearch_space.search_space import SearchSpace
+from pathfinding.rrtStarCombo.utilities.plotting import Plot
 
 
 # wrapper function
