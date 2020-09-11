@@ -9,7 +9,7 @@ from lib.rrt_star.search_space.search_space import SearchSpace
 # wrapper function
 def rrt_star_2d_search(obstacle_list, start, end):
     # instantiate attributes
-    Obstacles = obstacle_list
+    Obstacles = process_obstacles(obstacle_list)
 
     # dimensions of Search Space
     X_dimensions = np.array([(0, 150), (0, 150)])
@@ -18,22 +18,22 @@ def rrt_star_2d_search(obstacle_list, start, end):
     Q = np.array([(8, 4)])
 
     # res is taken from fastslam
-    r = res
+    r = 1
 
     # max number of samples to take before timing out
     max_samples = 1024
 
     # optional, number of nearby branches to rewire
-    rewire_count = 32
+    rewire_count = 500
 
     # probability of checking for a connection to goal
     prc = 0.1
 
     # create Search Space
-    X = SearchSpace(X_dimensions, obstacle_list)
+    X = SearchSpace(X_dimensions, Obstacles)
 
     # create rrt_search
-    rrt = RRTStar(X, Q, x_init, x_goal, max_samples, r, prc, rewire_count)
+    rrt = RRTStar(X, Q, start, end, max_samples, r, prc, rewire_count)
 
     try:
         # call the main algorithm
@@ -63,3 +63,11 @@ plot.plot_start(X, x_init)
 plot.plot_goal(X, x_goal)
 plot.draw(auto_open=True) 
 """
+
+
+def process_obstacles(obstacle_list):
+    result = []
+    for coor in obstacle_list:
+        result.append((*(coor), *(coor)))
+
+    return np.array(result)

@@ -34,9 +34,9 @@ class SearchSpace(object):
             # sanity check
             if any(len(o) / 2 != len(dimension_lengths) for o in O):
                 raise Exception("Obstacle has incorrect dimension definition")
-            if any(o[i] >= o[int(i + len(o) / 2)] for o in O for i in range(int(len(o) / 2))):
-                raise Exception(
-                    "Obstacle start must be less than obstacle end")
+            # if any(o[i] >= o[int(i + len(o) / 2)] for o in O for i in range(int(len(o) / 2))):
+            #     raise Exception(
+            #         "Obstacle start must be less than obstacle end")
             self.obs = index.Index(obstacle_generator(
                 O), interleaved=True, properties=p)
 
