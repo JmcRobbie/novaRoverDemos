@@ -8,6 +8,7 @@ Place Algorithm Imports Here
 from lib.modified_pledge import *
 from lib.a_star import *
 from lib.a_star_variants import *
+from lib.rrt_star_2d import *
 
 #########################################################################
 '''
@@ -22,7 +23,7 @@ Functions should be of the form * My_Function(occupancy_grid, start_position, en
 
 ################## List the algorithms you want to compare here ##############################
 algorithm_list = [modified_pledge, a_star,
-                  bidirectional_a_star, weighted_a_star]
+                  bidirectional_a_star, weighted_a_star, rrt_star_2d_search]
 
 
 ##############################################################################################
