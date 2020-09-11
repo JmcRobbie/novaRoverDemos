@@ -8,7 +8,7 @@ Place Algorithm Imports Here
 from lib.modified_pledge import *
 from lib.a_star import *
 from lib.a_star_variants import *
-from lib.rrt_star_2d import *
+from lib.rrt_star.rrt_star_2d import *
 
 #########################################################################
 '''
