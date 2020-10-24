@@ -1,28 +1,30 @@
-import math 
-import time 
+import math
+import time
 import random
-import statistics 
+import statistics
 
-# Import the algorithms we want to test 
-from src.a_star import * 
+# Import the algorithms we want to test
+from src.a_star import *
 from src.a_star_variants import *
 
 # Importing the map
 from maze.diagrams import *
 
 
-# Load the functions 
-functions = [a_star_search, bidirectional_a_star, weighted_a_star, dynamic_weighted_astar] 
+# Load the functions
+functions = [a_star_search, bidirectional_a_star,
+             weighted_a_star, dynamic_weighted_astar]
+#functions = [a_star_search]
 
-#print(type(functions))
+# print(type(functions))
 times = {f.__name__: [] for f in functions}
 path = {f.__name__: 0 for f in functions}
 
-# Running the tests 
-graph = diagram3
+# Running the tests
+graph = diagram5
 start, goal = (1, 4), (38, 28)
 
-for i in range(3000):
+for i in range(200):
     for _ in range(len(functions)):
         func = random.choice(functions)
         t0 = time.time()
