@@ -1,33 +1,34 @@
-import time 
+''' 
+This file is provided for additional testing of the different algorithms
+'''
 
-# Importing a-star and family  
-from src.a_star import * 
+from new_maze.generate_maze import maze_generator
+import time
+
+# Importing a-star and family
+from src.a_star import *
 from src.a_star_variants import *
 from src.other_algorithms import *
 
-# Importing necessary diagrams and grid visualizer 
+# Importing necessary diagrams and grid visualizer
 from maze.diagrams import *
 from maze.grid import draw_grid
+from new_maze.random_maze import *
 
-grid = diagram3
-
-# #Testing a-star 
+# Defining start and goal
 start, goal = (1, 4), (38, 28)
-# Calculating the cost and node origins 
-print('-------------------- Regular A* -----------------------\n')
-path = a_star_search(grid, start, goal)
-draw_grid(grid, width=3, path=path)
-print('\n')
+# # Get the desired path
+# path = a_star_search(grid1, start, goal)
+# # Print the length of path
+# print(len(path))
 
+# # Trying a dimension specific map
+# grid2 = diagram3
+# path = weighted_a_star(grid2, start, goal)
+# # Print the length of path
+# print(len(path))
 
-# Testing variants  
-print('-------------------- Bidirectional A* -----------------------\n')
-path = bidirectional_a_star(grid, start, goal)
-draw_grid(grid, width=3, path=path)
-print('\n')
-
-
-print('-------------------- Weighted A* -----------------------\n')
-path = weighted_a_star(grid, start, goal)
-draw_grid(grid, width=3, path=path)
-print('\n')
+maze_parameters = maze_generator(10, 10, 'light')
+# print(*maze_arguments)
+path = a_star_search(*maze_parameters)
+print(path)

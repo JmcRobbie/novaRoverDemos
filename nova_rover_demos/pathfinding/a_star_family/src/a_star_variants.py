@@ -98,9 +98,8 @@ def bidirectional_a_star(graph, start, goal):
     e = 4. So w2 = 5 => Theoretically return us a solution 5 times faster   
 '''
 
-def weighted_a_star(graph, start, goal):
-    # The weight which  we will prioritise the goal 
-    WEIGHT = 5 
+def weighted_a_star(graph, start, goal, weight=5): 
+    
     # Priority Queue track progression of nodes 
     frontier = PriorityQueue()
     frontier.put(start, 0)
@@ -135,7 +134,7 @@ def weighted_a_star(graph, start, goal):
                 cost_so_far[next] = new_cost
                 # Set the priority of the neighbor using the heuristic 
                 # We are taking distance to goal in consideration through heuristics 
-                priority = new_cost + manhattan_heuristic(goal, next) * WEIGHT
+                priority = new_cost + manhattan_heuristic(goal, next) * weight
                 frontier.put(next, priority)
                 came_from[next] = current
 
@@ -146,7 +145,7 @@ def weighted_a_star(graph, start, goal):
 
 
 # Dynamically weighted A* 
-def dynamic_weighted_astar(graph, start, goal, node_threshold, epsilon=2):
+def dynamic_weighted_astar(graph, start, goal, node_threshold=12, epsilon=2):
     # The weight which  we will prioritise the goal 
     weight = 1 
     # Priority Queue track progression of nodes 
